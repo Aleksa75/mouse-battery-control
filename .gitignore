@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+build/
+build_out/
+dist/
+releases/
+icons/
+config.json
+history.jsonl
+state.json
+app.log
+app.log.*
+telemetry.jsonl
+telemetry.jsonl.*
+client_secret.json
+google_token.json
