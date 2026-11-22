@@ -675,6 +675,7 @@
         <a href="#features" data-i18n="nav_features">Features</a>
         <a href="#install" data-i18n="nav_install">How to Get It</a>
         <a href="#faq" data-i18n="nav_faq">FAQ</a>
+        <a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener" data-i18n="nav_github">GitHub</a>
       </nav>
       <div class="nav-controls">
         <button id="lang-btn" class="ctrl-btn" type="button" aria-label="Switch language">RU / EN</button>
@@ -695,7 +696,7 @@
           </p>
           <div class="cta-row">
             <a id="download-btn" class="btn-primary" href="https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip" download="MouseBatteryControl.zip">
-              <span data-i18n="hero_download">Download for Windows (v2.28.0)</span>
+              <span data-i18n="hero_download">Download from GitHub (v2.28.0)</span>
             </a>
             <a class="btn-secondary" href="#install" data-i18n="hero_how">How to Install</a>
           </div>
@@ -825,8 +826,8 @@
         <div class="steps-grid">
           <div class="step-card">
             <span class="step-num" data-i18n="s1_num">Step 1</span>
-            <h3 data-i18n="s1_title">Download the Zip Bundle</h3>
-            <p data-i18n="s1_desc">Click Download above to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Optional SHA-256 checksum:</p>
+            <h3 data-i18n="s1_title">Download from GitHub Releases</h3>
+            <p data-i18n="s1_desc">Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Optional SHA-256 checksum:</p>
             <div class="sha-box">
               <span id="sha-value" class="sha-text">d5ca6c808e4737be54ae896365f496c0ff0633925618fd70b202745d67518f2a</span>
               <button id="copy-sha-btn" class="copy-btn" type="button" data-i18n="copy_btn">Copy</button>
@@ -883,7 +884,7 @@
 
           <details>
             <summary data-i18n="q4_t">How do updates work?</summary>
-            <p data-i18n="q4_a">Use the built-in Check for Updates button at the bottom of the app whenever an update source is configured, or download the latest <code>MouseBatteryControl.zip</code> from whoever shared it with you.</p>
+            <p data-i18n="q4_a">New versions are published on <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a>. Download the latest <code>MouseBatteryControl.zip</code> there, or set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> for automatic in-app updates via Check for Updates.</p>
           </details>
         </div>
       </div>
@@ -894,14 +895,14 @@
     <div class="container">
       <div class="footer-row">
         <span data-i18n="foot_left">Mouse Battery &amp; Control v2.28.0 — Built for Windows 10 &amp; 11</span>
-        <span data-i18n="foot_right">Portable • Local-First • No Ads</span>
+        <span data-i18n="foot_links"><a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">GitHub Repo</a> &bull; <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Latest Release</a></span>
       </div>
       <details>
-        <summary data-i18n="share_title">Sharing this page with friends or family?</summary>
+        <summary data-i18n="share_title">Sharing this app with friends or family?</summary>
         <ul>
-          <li data-i18n="share_1"><strong>Local / USB / Shared Folder:</strong> Opening <code>docs/index.html</code> directly already links to <code>../releases/MouseBatteryControl.zip</code>.</li>
-          <li data-i18n="share_2"><strong>Free Web Hosting:</strong> Upload the <code>docs/</code> folder to GitHub Pages, Netlify Drop, or Cloudflare Pages so anyone can open a link in any browser.</li>
-          <li data-i18n="share_3"><strong>Online Download Link:</strong> Before publishing online, edit <code>DOWNLOAD_URL</code> near the bottom of <code>docs/index.html</code> to point to your hosted <code>MouseBatteryControl.zip</code> (e.g., GitHub Releases URL or shared cloud link).</li>
+          <li data-i18n="share_1"><strong>Share this page:</strong> Send anyone <code>https://aleksa75.github.io/mouse-battery-control/</code> so they can read what the app does and download straight from GitHub Releases.</li>
+          <li data-i18n="share_2"><strong>Direct Zip link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> to download the latest Windows bundle directly.</li>
+          <li data-i18n="share_3"><strong>Automatic GitHub updates:</strong> Set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> so the app's built-in updater checks GitHub Releases automatically.</li>
         </ul>
       </details>
     </div>
@@ -919,12 +920,13 @@
         nav_features: "Features",
         nav_install: "How to Get It",
         nav_faq: "FAQ",
+        nav_github: "GitHub",
         theme_to_light: "☀ Light",
         theme_to_dark: "🌙 Dark",
         hero_eyebrow: "Lightweight Windows Tray Utility",
         hero_title: "Never get caught with a dead wireless mouse again.",
         hero_sub: "A tiny, ad-free Windows tray app that shows your wireless mouse battery right by the clock, learns how fast your battery drains, warns you before it dies, and puts mouse speed & DPI controls one click away.",
-        hero_download: `Download for Windows (${APP_VERSION})`,
+        hero_download: `Download from GitHub (${APP_VERSION})`,
         hero_how: "How to Install",
         chip_win: "Windows 10 / 11 (64-bit)",
         chip_size: "~19.6 MB portable .zip",
@@ -954,8 +956,8 @@
         inst_title: "How to Get It & Set It Up",
         inst_sub: "Takes under 30 seconds — no complex installer wizard needed.",
         s1_num: "Step 1",
-        s1_title: "Download the Zip Bundle",
-        s1_desc: "Click Download above to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Optional SHA-256 checksum:",
+        s1_title: "Download from GitHub Releases",
+        s1_desc: 'Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Optional SHA-256 checksum:',
         copy_btn: "Copy",
         copied_btn: "Copied!",
         s2_num: "Step 2",
@@ -977,25 +979,26 @@
         q3_t: "Is any data sent anywhere?",
         q3_a: "Never unless you explicitly connect Google Drive backup yourself. Settings, battery history, and action logs stay strictly inside your app folder as readable JSON/JSONL files.",
         q4_t: "How do updates work?",
-        q4_a: "Use the built-in Check for Updates button at the bottom of the app whenever an update source is configured, or download the latest <code>MouseBatteryControl.zip</code> from whoever shared it with you.",
+        q4_a: 'New versions are published on <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a>. Download the latest <code>MouseBatteryControl.zip</code> there, or set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> for automatic in-app updates via Check for Updates.',
         foot_left: `Mouse Battery & Control ${APP_VERSION} — Built for Windows 10 & 11`,
-        foot_right: "Portable • Local-First • No Ads",
-        share_title: "Sharing this page with friends or family?",
-        share_1: "<strong>Local / USB / Shared Folder:</strong> Opening <code>docs/index.html</code> directly already links to <code>../releases/MouseBatteryControl.zip</code>.",
-        share_2: "<strong>Free Web Hosting:</strong> Upload the <code>docs/</code> folder to GitHub Pages, Netlify Drop, or Cloudflare Pages so anyone can open a link in any browser.",
-        share_3: "<strong>Online Download Link:</strong> Before publishing online, edit <code>DOWNLOAD_URL</code> near the bottom of <code>docs/index.html</code> to point to your hosted <code>MouseBatteryControl.zip</code> (e.g., GitHub Releases URL or shared cloud link).",
+        foot_links: '<a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">GitHub Repo</a> • <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Latest Release</a>',
+        share_title: "Sharing this app with friends or family?",
+        share_1: "<strong>Share this page:</strong> Send anyone <code>https://aleksa75.github.io/mouse-battery-control/</code> so they can read what the app does and download straight from GitHub Releases.",
+        share_2: "<strong>Direct Zip link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> to download the latest Windows bundle directly.",
+        share_3: '<strong>Automatic GitHub updates:</strong> Set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> so the app\'s built-in updater checks GitHub Releases automatically.',
       },
       ru: {
         brand_name: "Mouse Battery & Control",
         nav_features: "Возможности",
         nav_install: "Как установить",
         nav_faq: "Частые вопросы",
+        nav_github: "GitHub",
         theme_to_light: "☀ Светлая",
         theme_to_dark: "🌙 Тёмная",
         hero_eyebrow: "Лёгкая утилита для трея Windows",
         hero_title: "Беспроводная мышь больше не разрядится внезапно.",
         hero_sub: "Небольшая программа без рекламы: показывает заряд мыши прямо в трее рядом с часами, изучает скорость разряда, предупреждает заранее и даёт быстрый доступ к скорости курсора и DPI.",
-        hero_download: `Скачать для Windows (${APP_VERSION})`,
+        hero_download: `Скачать с GitHub (${APP_VERSION})`,
         hero_how: "Как установить",
         chip_win: "Windows 10 / 11 (64-bit)",
         chip_size: "~19.6 МБ портативный .zip",
@@ -1025,8 +1028,8 @@
         inst_title: "Как скачать и установить",
         inst_sub: "Займёт меньше 30 секунд — без сложных установщиков.",
         s1_num: "Шаг 1",
-        s1_title: "Скачайте ZIP-архив",
-        s1_desc: "Нажмите «Скачать» выше, чтобы загрузить <code>MouseBatteryControl.zip</code> (~19.6 МБ). При желании можно сверить SHA-256:",
+        s1_title: "Скачайте с GitHub Releases",
+        s1_desc: 'Нажмите <strong>Скачать с GitHub</strong> выше (или откройте <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">страницу последнего релиза</a>), чтобы сохранить <code>MouseBatteryControl.zip</code> (~19.6 МБ). При желании проверьте SHA-256:',
         copy_btn: "Копировать",
         copied_btn: "Скопировано!",
         s2_num: "Шаг 2",
@@ -1048,17 +1051,17 @@
         q3_t: "Куда-то отправляются мои данные?",
         q3_a: "Никуда — пока вы сами не подключите резервное копирование в Google Drive. Настройки, история заряда и журнал действий лежат только в папке с программой.",
         q4_t: "Как обновлять программу?",
-        q4_a: "Нажмите «Проверить обновления» в нижней части окна (если задан источник обновлений) или скачайте свежий <code>MouseBatteryControl.zip</code> по ссылке от того, кто поделился с вами программой.",
+        q4_a: 'Новые версии публикуются в разделе <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a>. Можно скачать свежий <code>MouseBatteryControl.zip</code> оттуда или указать <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> в <code>config.json</code> для автообновлений кнопкой «Проверить обновления».',
         foot_left: `Mouse Battery & Control ${APP_VERSION} — Для Windows 10 и 11`,
-        foot_right: "Портативная • Локальная • Без рекламы",
-        share_title: "Хотите поделиться этой страницей?",
-        share_1: "<strong>Локально / флешка / общая папка:</strong> При открытии <code>docs/index.html</code> ссылка сразу ведёт на <code>../releases/MouseBatteryControl.zip</code>.",
-        share_2: "<strong>Бесплатный хостинг:</strong> Загрузите папку <code>docs/</code> на GitHub Pages, Netlify Drop или Cloudflare Pages — и страницей можно делиться обычной ссылкой.",
-        share_3: "<strong>Ссылка для скачивания онлайн:</strong> Перед публикацией в сеть замените значение <code>DOWNLOAD_URL</code> в скрипте внизу <code>docs/index.html</code> на публичную ссылку на <code>MouseBatteryControl.zip</code>.",
+        foot_links: '<a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">Репозиторий GitHub</a> • <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Последний релиз</a>',
+        share_title: "Хотите поделиться программой?",
+        share_1: "<strong>Поделитесь этой страницей:</strong> Отправьте ссылку <code>https://aleksa75.github.io/mouse-battery-control/</code>, чтобы человек увидел описание и скачал архив с GitHub Releases.",
+        share_2: "<strong>Прямая ссылка на ZIP:</strong> Или отправьте <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> для мгновенного скачивания.",
+        share_3: '<strong>Автообновления с GitHub:</strong> Укажите <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> в <code>config.json</code>, чтобы программа сама проверяла GitHub Releases.',
       },
     };
 
-    const HTML_KEYS = new Set(["s1_desc", "s2_desc", "s3_desc", "s4_desc", "ss_desc", "q4_a", "share_1", "share_2", "share_3"]);
+    const HTML_KEYS = new Set(["s1_desc", "s2_desc", "s3_desc", "s4_desc", "ss_desc", "q4_a", "foot_links", "share_1", "share_2", "share_3"]);
 
     function safeGetStorage(key) {
       try {
