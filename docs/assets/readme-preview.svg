@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="880" height="340" role="img" aria-label="Mouse Battery and Control Dark Mode, Light Mode, and Windows Tray Preview">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0E14"/>
+      <stop offset="100%" stop-color="#141923"/>
+    </linearGradient>
+    <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="340" rx="18" fill="url(#bgGrad)"/>
+
+  <!-- LEFT PANEL: DARK MODE DASHBOARD -->
+  <rect x="16" y="16" width="416" height="308" rx="14" fill="#0F1117" stroke="#2A3040" stroke-width="1.5"/>
+
+  <!-- Header row -->
+  <rect x="30" y="30" width="142" height="24" rx="12" fill="#1F2430" stroke="#2A3040"/>
+  <circle cx="44" cy="42" r="5" fill="#38BDF8"/>
+  <text x="55" y="46" fill="#F3F4F6" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="700">G502X PLUS</text>
+
+  <rect x="180" y="30" width="76" height="24" rx="12" fill="#172A20" stroke="#22C55E" stroke-opacity="0.45"/>
+  <text x="218" y="46" text-anchor="middle" fill="#22C55E" font-family="Segoe UI, system-ui, sans-serif" font-size="10.5" font-weight="700">Calibrated</text>
+
+  <text x="416" y="46" text-anchor="end" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600">Dark Mode</text>
+
+  <!-- Gauge Card -->
+  <rect x="30" y="64" width="388" height="114" rx="12" fill="#171A23" stroke="#2A3040"/>
+
+  <!-- Circular Gauge (85%) -->
+  <circle cx="88" cy="121" r="38" fill="none" stroke="#2A3040" stroke-width="8"/>
+  <circle cx="88" cy="121" r="38" fill="none" stroke="#22C55E" stroke-width="8" stroke-linecap="round"
+          stroke-dasharray="238.76" stroke-dashoffset="35.81" transform="rotate(-90 88 121)"/>
+  <text x="88" y="123" text-anchor="middle" fill="#F3F4F6" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="800">85%</text>
+  <text x="88" y="139" text-anchor="middle" fill="#22C55E" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="700">Active</text>
+
+  <!-- Metrics -->
+  <text x="148" y="92" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5">Est. Remaining</text>
+  <text x="400" y="92" text-anchor="end" fill="#F3F4F6" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700">~115 h left</text>
+
+  <line x1="148" y1="103" x2="400" y2="103" stroke="#2A3040" stroke-width="1"/>
+  <text x="148" y="121" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5">Power Draw</text>
+  <text x="400" y="121" text-anchor="end" fill="#38BDF8" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700">~14 mW @ 1000 Hz</text>
+
+  <line x1="148" y1="132" x2="400" y2="132" stroke="#2A3040" stroke-width="1"/>
+  <text x="148" y="150" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5">Battery Health</text>
+  <text x="400" y="150" text-anchor="end" fill="#22C55E" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700">Good (active learning)</text>
+
+  <!-- History Chart Card -->
+  <rect x="30" y="188" width="388" height="122" rx="12" fill="#171A23" stroke="#2A3040"/>
+  <text x="46" y="209" fill="#F3F4F6" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700">Battery History</text>
+  <text x="402" y="209" text-anchor="end" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="10">Last 24h (Ctrl+Scroll to zoom)</text>
+
+  <!-- Chart grid & smooth curve -->
+  <line x1="46" y1="226" x2="402" y2="226" stroke="#2A3040" stroke-dasharray="3,3"/>
+  <line x1="46" y1="254" x2="402" y2="254" stroke="#2A3040" stroke-dasharray="3,3"/>
+  <line x1="46" y1="282" x2="402" y2="282" stroke="#2A3040"/>
+
+  <path d="M 48 228 C 110 232, 165 239, 225 247 C 285 255, 345 262, 398 269 L 398 282 L 48 282 Z" fill="url(#chartGrad)"/>
+  <path d="M 48 228 C 110 232, 165 239, 225 247 C 285 255, 345 262, 398 269" fill="none" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="398" cy="269" r="4" fill="#38BDF8"/>
+
+  <text x="48" y="299" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="9.5">10:00</text>
+  <text x="225" y="299" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="9.5">14:00</text>
+  <text x="398" y="299" text-anchor="end" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="9.5">18:00</text>
+
+  <!-- RIGHT PANEL: SOFT LIGHT MODE + WINDOWS TRAY -->
+  <rect x="448" y="16" width="416" height="308" rx="14" fill="#CFD8E3" stroke="#9AA9BC" stroke-width="1.5"/>
+
+  <text x="464" y="42" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700">Quick Controls</text>
+  <text x="848" y="42" text-anchor="end" fill="#3F4E63" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600">Soft Light Mode</text>
+
+  <!-- Controls Card -->
+  <rect x="462" y="54" width="388" height="172" rx="12" fill="#DFE6EF" stroke="#9AA9BC"/>
+
+  <!-- Row 1: Notifications ON -->
+  <text x="478" y="79" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600">Low Battery Notifications</text>
+  <rect x="794" y="65" width="40" height="20" rx="10" fill="#1565C0"/>
+  <circle cx="824" cy="75" r="7.5" fill="#F8FAFC"/>
+
+  <line x1="478" y1="95" x2="834" y2="95" stroke="#C5D0DE" stroke-width="1"/>
+
+  <!-- Row 2: Start with Windows ON (Windows Accent Violet) -->
+  <text x="478" y="114" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600">Start with Windows</text>
+  <rect x="794" y="100" width="40" height="20" rx="10" fill="#6241D2"/>
+  <circle cx="824" cy="110" r="7.5" fill="#F8FAFC"/>
+
+  <line x1="478" y1="130" x2="834" y2="130" stroke="#C5D0DE" stroke-width="1"/>
+
+  <!-- Row 3: Auto-Sync OFF -->
+  <text x="478" y="149" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600">Google Drive Auto-Sync</text>
+  <rect x="794" y="135" width="40" height="20" rx="10" fill="#64748B"/>
+  <circle cx="804" cy="145" r="7.5" fill="#F8FAFC"/>
+
+  <line x1="478" y1="165" x2="834" y2="165" stroke="#C5D0DE" stroke-width="1"/>
+
+  <!-- Polling Rate Pills -->
+  <text x="478" y="186" fill="#3F4E63" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="700">Report Rate (Logitech HID++)</text>
+  <rect x="478" y="193" width="82" height="24" rx="7" fill="#9AC0EC" stroke="#1565C0" stroke-width="1.5"/>
+  <text x="519" y="209" text-anchor="middle" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="700">1000 Hz</text>
+
+  <rect x="568" y="193" width="82" height="24" rx="7" fill="#C5D0DE" stroke="#9AA9BC"/>
+  <text x="609" y="209" text-anchor="middle" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600">500 Hz</text>
+
+  <rect x="658" y="193" width="82" height="24" rx="7" fill="#C5D0DE" stroke="#9AA9BC"/>
+  <text x="699" y="209" text-anchor="middle" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600">250 Hz</text>
+
+  <rect x="748" y="193" width="86" height="24" rx="7" fill="#C5D0DE" stroke="#9AA9BC"/>
+  <text x="791" y="209" text-anchor="middle" fill="#1E293B" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600">125 Hz</text>
+
+  <!-- Windows System Tray Bar Mockup -->
+  <rect x="462" y="236" width="388" height="74" rx="12" fill="#DFE6EF" stroke="#9AA9BC"/>
+  <text x="478" y="255" fill="#3F4E63" font-family="Segoe UI, system-ui, sans-serif" font-size="10.5" font-weight="700">Live Windows Taskbar Tray Icon</text>
+
+  <rect x="478" y="264" width="356" height="36" rx="8" fill="#1B202B" stroke="#334155"/>
+  <text x="494" y="286" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="11">Always visible beside the clock</text>
+
+  <!-- Green Tray Battery Badge -->
+  <rect x="716" y="271" width="26" height="22" rx="5" fill="#16A34A"/>
+  <text x="729" y="286" text-anchor="middle" fill="#FFFFFF" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="800">85</text>
+
+  <!-- Volume/Wi-Fi glyph dots & Clock -->
+  <circle cx="755" cy="282" r="3" fill="#94A3B8"/>
+  <circle cx="766" cy="282" r="3" fill="#94A3B8"/>
+  <text x="822" y="279" text-anchor="end" fill="#E2E8F0" font-family="Segoe UI, system-ui, sans-serif" font-size="10.5" font-weight="600">16:45</text>
+  <text x="822" y="292" text-anchor="end" fill="#94A3B8" font-family="Segoe UI, system-ui, sans-serif" font-size="9.5">22-Nov</text>
+</svg>
