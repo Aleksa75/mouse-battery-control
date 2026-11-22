@@ -41,7 +41,7 @@ import updater
 
 BASE_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
-APP_VERSION = "2.28.0"
+APP_VERSION = "2.29.0"
 LOG_PATH = BASE_DIR / "app.log"
 
 
@@ -1417,6 +1417,7 @@ class MouseBatteryTrayApp:
 
         notes_card = _make_card(self._t("recent_highlights"))
         highlights = [
+            ("v2.29.0", self._t("hl_v2290")),
             ("v2.28.0", self._t("hl_v2280")),
             ("v2.27.0", self._t("hl_v2270")),
             ("v2.26.0", self._t("hl_v2260")),

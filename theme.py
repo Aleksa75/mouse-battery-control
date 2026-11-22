@@ -45,28 +45,28 @@ THEMES: dict[str, dict[str, str]] = {
         "SWITCH_TRACK_OFF": "#475569",
     },
     "Light": {
-        "BG": "#CFD8E3",
-        "CARD": "#DFE6EF",
-        "CARD_ALT": "#C5D0DE",
-        "BORDER": "#9AA9BC",
-        "FG": "#1E293B",
-        "FG_MUTED": "#3F4E63",
-        "ACCENT": "#1565C0",
-        "ACCENT_HOVER": "#0F52A3",
+        "BG": "#F0F4F9",
+        "CARD": "#FFFFFF",
+        "CARD_ALT": "#E9EEF6",
+        "BORDER": "#DCE3EE",
+        "FG": "#1F1F1F",
+        "FG_MUTED": "#444746",
+        "ACCENT": "#0B57D0",
+        "ACCENT_HOVER": "#0842A0",
         "ACCENT_TEXT": "#FFFFFF",
-        "GREEN": "#156E37",
-        "AMBER": "#9A4A08",
-        "RED": "#B91C1C",
-        "CHART_FILL": "#B9D2EC",
-        "GRID_MAJOR": "#B0BECE",
-        "GRID_MINOR": "#CBD5E1",
-        "PLAYHEAD": "#334155",
-        "TIP_BG": "#E6ECF3",
-        "SEG_SELECTED": "#9AC0EC",
-        "SEG_SELECTED_HOVER": "#7EACE4",
-        "SWITCH_BUTTON": "#F8FAFC",
-        "SWITCH_BUTTON_HOVER": "#FFFFFF",
-        "SWITCH_TRACK_OFF": "#64748B",
+        "GREEN": "#146C2E",
+        "AMBER": "#9A5400",
+        "RED": "#B3261E",
+        "CHART_FILL": "#D3E3FD",
+        "GRID_MAJOR": "#D8E0EC",
+        "GRID_MINOR": "#E9EEF6",
+        "PLAYHEAD": "#444746",
+        "TIP_BG": "#FFFFFF",
+        "SEG_SELECTED": "#D3E3FD",
+        "SEG_SELECTED_HOVER": "#C2D7FA",
+        "SWITCH_BUTTON": "#FFFFFF",
+        "SWITCH_BUTTON_HOVER": "#F0F4F9",
+        "SWITCH_TRACK_OFF": "#747775",
     },
     "Matrix": {
         "BG": "#040A06",
@@ -291,7 +291,7 @@ def derive_accent_tokens(base_hex: str, resolved_theme: str) -> dict[str, str]:
             s_acc_light,
             lambda c: (
                 contrast_ratio(c, "#FFFFFF") >= 4.5
-                and contrast_ratio(c, card) >= 3.8
+                and contrast_ratio(c, card) >= 4.5
             ),
             lambda c: min(contrast_ratio(c, "#FFFFFF"), contrast_ratio(c, card)),
         )
@@ -302,28 +302,28 @@ def derive_accent_tokens(base_hex: str, resolved_theme: str) -> dict[str, str]:
             max(20, min(58, int(round((acc_l - 0.03) * 100)))),
             max(0.20, acc_l - 0.06),
             s_acc_light,
-            lambda c: contrast_ratio(c, "#FFFFFF") >= 4.5 and contrast_ratio(c, card) >= 4.0,
+            lambda c: contrast_ratio(c, "#FFFFFF") >= 4.5 and contrast_ratio(c, card) >= 4.5,
             lambda c: min(contrast_ratio(c, "#FFFFFF"), contrast_ratio(c, card)),
         )
 
-        s_seg = min(0.80, max(s, 0.45)) if s > 0.08 else 0.0
+        s_seg = min(0.85, max(s, 0.50)) if s > 0.08 else 0.0
         seg_l, seg_sel = _pick_lightness(
-            66,
             80,
-            0.73,
+            92,
+            0.86,
+            s_seg,
+            lambda c: contrast_ratio(fg, c) >= 7.0,
+            lambda c: contrast_ratio(fg, c),
+        )
+        _, seg_hover = _pick_lightness(
+            74,
+            max(74, min(88, int(round((seg_l - 0.04) * 100)))),
+            max(0.74, seg_l - 0.06),
             s_seg,
             lambda c: contrast_ratio(fg, c) >= 5.5,
             lambda c: contrast_ratio(fg, c),
         )
-        _, seg_hover = _pick_lightness(
-            58,
-            max(58, min(76, int(round((seg_l - 0.04) * 100)))),
-            max(0.58, seg_l - 0.06),
-            s_seg,
-            lambda c: contrast_ratio(fg, c) >= 4.5,
-            lambda c: contrast_ratio(fg, c),
-        )
-        chart_fill = _blend_hex(acc, card, 0.22)
+        chart_fill = _blend_hex(acc, card, 0.16)
 
     return {
         "ACCENT": acc,
