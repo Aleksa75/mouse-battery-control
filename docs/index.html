@@ -669,7 +669,7 @@
       <div class="brand">
         <img src="assets/app_icon.png" alt="Mouse Battery & Control icon" />
         <span data-i18n="brand_name">Mouse Battery &amp; Control</span>
-        <span class="ver-pill">v2.30.0</span>
+        <span class="ver-pill">v3.0.0</span>
       </div>
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#features" data-i18n="nav_features">Features</a>
@@ -688,23 +688,23 @@
     <section class="hero">
       <div class="container hero-grid">
         <div>
-          <span class="hero-eyebrow" data-i18n="hero_eyebrow">Lightweight Windows Tray Utility</span>
+          <span class="hero-eyebrow" data-i18n="hero_eyebrow">Native Rust Tray Host + Lazy Edge WebView2</span>
           <h1 data-i18n="hero_title">Never get caught with a dead wireless mouse again.</h1>
           <p class="hero-sub" data-i18n="hero_sub">
-            A tiny, ad-free Windows tray app that shows your wireless mouse battery right by the clock,
-            learns how fast your battery drains, warns you before it dies, and puts mouse speed &amp; DPI controls one click away.
+            An ultra-light, ad-free Windows tray app that shows your wireless mouse battery right by the clock,
+            learns how fast your battery drains, warns you before it dies, and puts mouse speed &amp; Logitech HID++ controls one click away.
           </p>
           <div class="cta-row">
-            <a id="download-btn" class="btn-primary" href="https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip" download="MouseBatteryControl.zip">
-              <span data-i18n="hero_download">Download from GitHub (v2.30.0)</span>
+            <a id="download-btn" class="btn-primary" href="https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.exe" download="MouseBatteryControl.exe">
+              <span data-i18n="hero_download">Download from GitHub (v3.0.0)</span>
             </a>
             <a class="btn-secondary" href="#install" data-i18n="hero_how">How to Install</a>
           </div>
           <div class="trust-row">
             <span class="trust-chip" data-i18n="chip_win">Windows 10 / 11 (64-bit)</span>
-            <span class="trust-chip" data-i18n="chip_size">~19.6 MB portable .zip</span>
+            <span class="trust-chip" data-i18n="chip_size">492 KB single .exe</span>
             <span class="trust-chip" data-i18n="chip_noacct">No account needed</span>
-            <span class="trust-chip" data-i18n="chip_local">100% local &amp; free</span>
+            <span class="trust-chip" data-i18n="chip_local">100% local &amp; ~2.5 MB RAM</span>
           </div>
         </div>
 
@@ -780,13 +780,13 @@
           <article class="card">
             <div class="card-icon" aria-hidden="true">🔋</div>
             <h3 data-i18n="f1_title">Live System Tray Battery</h3>
-            <p data-i18n="f1_desc">Always-visible color-coded battery percentage in your Windows taskbar tray with instant charging status.</p>
+            <p data-i18n="f1_desc">Always-visible color-coded battery percentage in your Windows tray using ~2.5 MB private RAM when minimized; WebView2 unloads on close.</p>
           </article>
 
           <article class="card">
             <div class="card-icon" aria-hidden="true">📈</div>
             <h3 data-i18n="f2_title">Smart Drain Learning</h3>
-            <p data-i18n="f2_desc">Records real active-use sessions to project hours left, chart battery history, and estimate battery health.</p>
+            <p data-i18n="f2_desc">Records real active-use sessions to project hours left, plot unstretched zoomable 24h/7d/30d history charts, and estimate battery health.</p>
           </article>
 
           <article class="card">
@@ -798,19 +798,19 @@
           <article class="card">
             <div class="card-icon" aria-hidden="true">🖱️</div>
             <h3 data-i18n="f4_title">Mouse &amp; Logitech Controls</h3>
-            <p data-i18n="f4_desc">Adjust Windows pointer speed, scroll speed, and left/right buttons for any mouse — plus live DPI, polling rate, and onboard profiles for Logitech HID++ mice.</p>
+            <p data-i18n="f4_desc">Adjust Windows pointer speed, scroll speed, button swap, and auto game acceleration — plus live DPI, polling rate, LIGHTSYNC RGB, and onboard profiles for Logitech HID++ 2.0 mice.</p>
           </article>
 
           <article class="card">
             <div class="card-icon" aria-hidden="true">🎨</div>
-            <h3 data-i18n="f5_title">Dark, Light &amp; Windows Accent</h3>
-            <p data-i18n="f5_desc">Follows your Windows theme and accent color cleanly, with high readability, drag-to-reorder tabs, and EN / RU languages.</p>
+            <h3 data-i18n="f5_title">Themes &amp; Complementary Accents</h3>
+            <p data-i18n="f5_desc">Choose Dark, Light, Matrix, or System themes with Windows accent &amp; complementary accent color pairing, drag-to-reorder tabs, and EN / RU languages.</p>
           </article>
 
           <article class="card">
-            <div class="card-icon" aria-hidden="true">☁️</div>
-            <h3 data-i18n="f6_title">Instant Start &amp; Optional Sync</h3>
-            <p data-i18n="f6_desc">Starts directly from its folder with no temp unpacking, keeps all history local, and offers optional Google Drive backup.</p>
+            <div class="card-icon" aria-hidden="true">⚡</div>
+            <h3 data-i18n="f6_title">Zero Bloat, Atomic Backup &amp; Diagnostics</h3>
+            <p data-i18n="f6_desc">Single 492 KB standalone Rust EXE with no runtime folder, atomic JSON preference export/import, live RAM &amp; idle-time diagnostics, and opt-in online mouse icons.</p>
           </article>
         </div>
       </div>
@@ -820,30 +820,30 @@
       <div class="container">
         <div class="section-head">
           <h2 data-i18n="inst_title">How to Get It &amp; Set It Up</h2>
-          <p data-i18n="inst_sub">Takes under 30 seconds — no complex installer wizard needed.</p>
+          <p data-i18n="inst_sub">Takes 15 seconds — just one 492 KB executable, no installer or ZIP extraction needed.</p>
         </div>
 
         <div class="steps-grid">
           <div class="step-card">
             <span class="step-num" data-i18n="s1_num">Step 1</span>
             <h3 data-i18n="s1_title">Download from GitHub Releases</h3>
-            <p data-i18n="s1_desc">Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Optional SHA-256 checksum:</p>
+            <p data-i18n="s1_desc">Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.exe</code> (492 KB). Verify SHA-256 checksum:</p>
             <div class="sha-box">
-              <span id="sha-value" class="sha-text">308f8c6e58f24d898c7ef0bedc1cc7ba8022b2d2b1e6e6b8dd27856725896758</span>
+              <span id="sha-value" class="sha-text">4a5fb97e74ec162e31cb73701bd85128034a828f96d6790d3bbea39ecd5778cc</span>
               <button id="copy-sha-btn" class="copy-btn" type="button" data-i18n="copy_btn">Copy</button>
             </div>
           </div>
 
           <div class="step-card">
             <span class="step-num" data-i18n="s2_num">Step 2</span>
-            <h3 data-i18n="s2_title">Extract the Folder</h3>
-            <p data-i18n="s2_desc">Right-click <code>MouseBatteryControl.zip</code> → <strong>Extract All…</strong> into a permanent folder such as <code>Documents\MouseBatteryControl</code>. Keep <code>MouseBatteryControl.exe</code> and the <code>_internal</code> folder together.</p>
+            <h3 data-i18n="s2_title">Place in a Permanent Folder</h3>
+            <p data-i18n="s2_desc">Move <code>MouseBatteryControl.exe</code> into a dedicated folder such as <code>Documents\MouseBatteryControl</code>. No ZIP extraction, extra runtime folder, or installer is required.</p>
           </div>
 
           <div class="step-card">
             <span class="step-num" data-i18n="s3_num">Step 3</span>
             <h3 data-i18n="s3_title">Run MouseBatteryControl.exe</h3>
-            <p data-i18n="s3_desc">Double-click <code>MouseBatteryControl.exe</code> inside your extracted folder. The window opens and a battery badge appears in your system tray.</p>
+            <p data-i18n="s3_desc">Double-click <code>MouseBatteryControl.exe</code>. The WebView2 dashboard opens and a live battery badge appears in your system tray; closing the window unloads the renderer cleanly.</p>
           </div>
 
           <div class="step-card">
@@ -855,7 +855,7 @@
 
         <div class="smartscreen-tip" role="note">
           <strong data-i18n="ss_title">First launch on Windows? Don't worry if SmartScreen pops up:</strong>
-          <p data-i18n="ss_desc">Because this is a free personal utility without a paid Microsoft developer certificate, Windows may show <em>“Windows protected your PC”</em> the first time you open it. Simply click <strong>More info</strong> → <strong>Run anyway</strong>.</p>
+          <p data-i18n="ss_desc">Because this is a free personal utility without a paid Microsoft developer certificate, Windows may show <em>“Windows protected your PC”</em> the first time you open it. After checking the SHA-256 above matches your download from GitHub, click <strong>More info</strong> → <strong>Run anyway</strong>.</p>
         </div>
       </div>
     </section>
@@ -869,22 +869,22 @@
         <div class="faq-list">
           <details>
             <summary data-i18n="q1_t">Does it work with any wireless mouse?</summary>
-            <p data-i18n="q1_a">Yes! It supports Bluetooth / BLE mice (including Windows battery reporting) and Logitech wireless mice (via G HUB or direct USB receiver). Non-Logitech mice get battery tracking (when the mouse reports battery to Windows) plus Windows pointer &amp; scroll tuning, while Logitech HID++ mice also unlock DPI, polling rate, and onboard memory controls.</p>
+            <p data-i18n="q1_a">It supports Logitech wireless mice (via G HUB or direct USB / Lightspeed HID++ receiver) and works alongside any Windows mouse for pointer speed, scroll lines, button swap, and auto game acceleration; Logitech HID++ 2.0 mice also unlock live DPI, polling rate, LIGHTSYNC RGB, and onboard profiles.</p>
           </details>
 
           <details>
             <summary data-i18n="q2_t">Does it slow down my PC or hurt gaming performance?</summary>
-            <p data-i18n="q2_a">No. Between short polls it stays asleep in the background using practically zero CPU, and the unpacked app starts nearly instantaneously without extracting temp files.</p>
+            <p data-i18n="q2_a">No. Written in native Rust with lazy WebView2 unloading, closing the window tears down the browser renderer completely so the tray host sits around ~2.5 MB private RAM with negligible CPU use.</p>
           </details>
 
           <details>
             <summary data-i18n="q3_t">Is any data sent anywhere?</summary>
-            <p data-i18n="q3_a">Never unless you explicitly connect Google Drive backup yourself. Settings, battery history, and action logs stay strictly inside your app folder as readable JSON/JSONL files.</p>
+            <p data-i18n="q3_a">Never by default. Configuration and battery history stay 100% locally inside your app folder as atomic JSON/JSONL files (`config.json`, `history.jsonl`). Online mouse icon lookups and GitHub update checks only run if enabled or triggered.</p>
           </details>
 
           <details>
             <summary data-i18n="q4_t">How do updates work?</summary>
-            <p data-i18n="q4_a">New versions are published on <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a>. Download the latest <code>MouseBatteryControl.zip</code> there, or set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> for automatic in-app updates via Check for Updates.</p>
+            <p data-i18n="q4_a">Built-in update checking against <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a> is preconfigured out of the box — click <strong>Check for Updates</strong> in the <strong>Sync &amp; Backup</strong> tab to see if a newer release is posted and open the download directly.</p>
           </details>
         </div>
       </div>
@@ -894,25 +894,25 @@
   <footer>
     <div class="container">
       <div class="footer-row">
-        <span data-i18n="foot_left">Mouse Battery &amp; Control v2.30.0 — Built for Windows 10 &amp; 11</span>
+        <span data-i18n="foot_left">Mouse Battery &amp; Control v3.0.0 — Built for Windows 10 &amp; 11</span>
         <span data-i18n="foot_links"><a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">GitHub Repo</a> &bull; <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Latest Release</a></span>
       </div>
       <details>
         <summary data-i18n="share_title">Sharing this app with friends or family?</summary>
         <ul>
           <li data-i18n="share_1"><strong>Share this page:</strong> Send anyone <code>https://aleksa75.github.io/mouse-battery-control/</code> so they can read what the app does and download straight from GitHub Releases.</li>
-          <li data-i18n="share_2"><strong>Direct Zip link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> to download the latest Windows bundle directly.</li>
-          <li data-i18n="share_3"><strong>Automatic GitHub updates:</strong> Set <code>"update_source": "github:Aleksa75/mouse-battery-control"</code> in <code>config.json</code> so the app's built-in updater checks GitHub Releases automatically.</li>
+          <li data-i18n="share_2"><strong>Direct EXE link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.exe</code> to download the 492 KB standalone Windows app directly.</li>
+          <li data-i18n="share_3"><strong>Built-in GitHub updates:</strong> v3.0.0 includes preconfigured GitHub Releases checking via <strong>Check for Updates</strong> and uses Edge WebView2 already built into Windows 10/11.</li>
         </ul>
       </details>
     </div>
   </footer>
 
   <script>
-    // Hosting note: when hosting this page online, replace DOWNLOAD_URL with your public link to MouseBatteryControl.zip
-    const DOWNLOAD_URL = "https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip";
-    const APP_VERSION = "v2.30.0";
-    const ZIP_SHA256 = "308f8c6e58f24d898c7ef0bedc1cc7ba8022b2d2b1e6e6b8dd27856725896758";
+    // Hosting note: when hosting this page online, replace DOWNLOAD_URL with your public link to MouseBatteryControl.exe
+    const DOWNLOAD_URL = "https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.exe";
+    const APP_VERSION = "v3.0.0";
+    const EXE_SHA256 = "4a5fb97e74ec162e31cb73701bd85128034a828f96d6790d3bbea39ecd5778cc";
 
     const STRINGS = {
       en: {
@@ -923,15 +923,15 @@
         nav_github: "GitHub",
         theme_to_light: "☀ Light",
         theme_to_dark: "🌙 Dark",
-        hero_eyebrow: "Lightweight Windows Tray Utility",
+        hero_eyebrow: "Native Rust Tray Host + Lazy Edge WebView2",
         hero_title: "Never get caught with a dead wireless mouse again.",
-        hero_sub: "A tiny, ad-free Windows tray app that shows your wireless mouse battery right by the clock, learns how fast your battery drains, warns you before it dies, and puts mouse speed & DPI controls one click away.",
+        hero_sub: "An ultra-light, ad-free Windows tray app that shows your wireless mouse battery right by the clock, learns how fast your battery drains, warns you before it dies, and puts mouse speed & Logitech HID++ controls one click away.",
         hero_download: `Download from GitHub (${APP_VERSION})`,
         hero_how: "How to Install",
         chip_win: "Windows 10 / 11 (64-bit)",
-        chip_size: "~19.6 MB portable .zip",
+        chip_size: "492 KB single .exe",
         chip_noacct: "No account needed",
-        chip_local: "100% local & free",
+        chip_local: "100% local & ~2.5 MB RAM",
         mock_calibrated: "Calibrated",
         mock_active: "Active",
         mock_time_k: "Est. Remaining",
@@ -942,30 +942,30 @@
         feat_title: "What It Does",
         feat_sub: "Designed to stay quietly in your taskbar until you need it — no bloated driver suites or logins.",
         f1_title: "Live System Tray Battery",
-        f1_desc: "Always-visible color-coded battery percentage in your Windows taskbar tray with instant charging status.",
+        f1_desc: "Always-visible color-coded battery percentage in your Windows tray using ~2.5 MB private RAM when minimized; WebView2 unloads on close.",
         f2_title: "Smart Drain Learning",
-        f2_desc: "Records real active-use sessions to project hours left, chart battery history, and show an experimental battery health estimate.",
+        f2_desc: "Records real active-use sessions to project hours left, plot unstretched zoomable 24h/7d/30d history charts, and estimate battery health.",
         f3_title: "Timely Windows Alerts",
         f3_desc: "Sends native Windows notifications at low/critical thresholds or when your mouse won't last through the evening.",
         f4_title: "Mouse & Logitech Controls",
-        f4_desc: "Adjust Windows pointer speed, scroll speed, and left/right buttons for any mouse — plus live DPI, polling rate, and onboard profiles for Logitech HID++ mice.",
-        f5_title: "Dark, Light & Windows Accent",
-        f5_desc: "Follows your Windows theme and accent color cleanly, with high readability, drag-to-reorder tabs, and EN / RU languages.",
-        f6_title: "Instant Start, DPAPI & Opt-In Sync",
-        f6_desc: "Starts straight from its folder, encrypts optional Google Drive tokens with Windows DPAPI, and keeps online icon lookup opt-in (off by default).",
+        f4_desc: "Adjust Windows pointer speed, scroll speed, button swap, and auto game acceleration — plus live DPI, polling rate, LIGHTSYNC RGB, and onboard profiles for Logitech HID++ 2.0 mice.",
+        f5_title: "Themes & Complementary Accents",
+        f5_desc: "Choose Dark, Light, Matrix, or System themes with Windows accent & complementary accent color pairing, drag-to-reorder tabs, and EN / RU languages.",
+        f6_title: "Zero Bloat, Atomic Backup & Diagnostics",
+        f6_desc: "Single 492 KB standalone Rust EXE with no runtime folder, atomic JSON preference export/import, live RAM & idle-time diagnostics, and opt-in online mouse icons.",
         inst_title: "How to Get It & Set It Up",
-        inst_sub: "Takes under 30 seconds — no complex installer wizard needed.",
+        inst_sub: "Takes 15 seconds — just one 492 KB executable, no installer or ZIP extraction needed.",
         s1_num: "Step 1",
         s1_title: "Download from GitHub Releases",
-        s1_desc: 'Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.zip</code> (~19.6 MB). Verify SHA-256 checksum:',
+        s1_desc: 'Click <strong>Download from GitHub</strong> above (or open the <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">latest release page</a>) to save <code>MouseBatteryControl.exe</code> (492 KB). Verify SHA-256 checksum:',
         copy_btn: "Copy",
         copied_btn: "Copied!",
         s2_num: "Step 2",
-        s2_title: "Extract the Folder",
-        s2_desc: "Right-click <code>MouseBatteryControl.zip</code> → <strong>Extract All…</strong> into a permanent folder such as <code>Documents\\MouseBatteryControl</code>. Keep <code>MouseBatteryControl.exe</code> and the <code>_internal</code> folder together.",
+        s2_title: "Place in a Permanent Folder",
+        s2_desc: "Move <code>MouseBatteryControl.exe</code> into a dedicated folder such as <code>Documents\\MouseBatteryControl</code>. No ZIP extraction, extra runtime folder, or installer is required.",
         s3_num: "Step 3",
         s3_title: "Run MouseBatteryControl.exe",
-        s3_desc: "Double-click <code>MouseBatteryControl.exe</code> inside your extracted folder. The window opens and a battery badge appears in your system tray.",
+        s3_desc: "Double-click <code>MouseBatteryControl.exe</code>. The WebView2 dashboard opens and a live battery badge appears in your system tray; closing the window unloads the renderer cleanly.",
         s4_num: "Step 4",
         s4_title: "Auto-Start at Login (Optional)",
         s4_desc: "Open the <strong>Notifications</strong> tab and toggle <strong>Start with Windows</strong> on so it quietly monitors your mouse every time you turn on your PC.",
@@ -973,19 +973,19 @@
         ss_desc: "Because this is a free personal utility without a paid Microsoft developer certificate, Windows may show <em>“Windows protected your PC”</em> the first time you open it. After checking the SHA-256 above matches your download from GitHub, click <strong>More info</strong> → <strong>Run anyway</strong>.",
         faq_title: "Frequently Asked Questions",
         q1_t: "Does it work with any wireless mouse?",
-        q1_a: "It supports Bluetooth / BLE mice (when the mouse exposes the standard Windows GATT Battery Service) and Logitech wireless mice (via G HUB or direct USB receiver). Generic wired/USB mice still get Windows pointer & scroll tuning, while Logitech HID++ mice unlock DPI, polling rate, and onboard profiles.",
+        q1_a: "It supports Logitech wireless mice (via G HUB or direct USB / Lightspeed HID++ receiver) and works alongside any Windows mouse for pointer speed, scroll lines, button swap, and auto game acceleration; Logitech HID++ 2.0 mice also unlock live DPI, polling rate, LIGHTSYNC RGB, and onboard profiles.",
         q2_t: "Does it slow down my PC or hurt gaming performance?",
-        q2_a: "No. Between short polls it stays asleep in the background using practically zero CPU, and the unpacked app starts nearly instantaneously without extracting temp files.",
+        q2_a: "No. Written in native Rust with lazy WebView2 unloading, closing the window tears down the browser renderer completely so the tray host sits around ~2.5 MB private RAM with negligible CPU use.",
         q3_t: "Is any data sent anywhere?",
-        q3_a: "No background data leaves your PC by default. Settings, history, and telemetry stay locally in your app folder; Google Drive sync and Wikimedia Commons mouse icon lookups are both strictly opt-in (and Drive tokens are encrypted with Windows DPAPI).",
+        q3_a: "Never by default. Configuration and battery history stay 100% locally inside your app folder as atomic JSON/JSONL files (config.json and history.jsonl). Online mouse icon lookups are opt-in (off by default).",
         q4_t: "How do updates work?",
-        q4_a: 'Automatic updates from <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a> work out of the box with no manual config edits — just click <strong>Check for Updates</strong> inside the app (verified by SHA-256 digest).',
+        q4_a: 'Built-in update checking against <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a> is preconfigured out of the box — click <strong>Check for Updates</strong> in the <strong>Sync &amp; Backup</strong> tab to see if a newer release is posted.',
         foot_left: `Mouse Battery & Control ${APP_VERSION} — Built for Windows 10 & 11`,
         foot_links: '<a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">GitHub Repo</a> • <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Latest Release</a>',
         share_title: "Sharing this app with friends or family?",
         share_1: "<strong>Share this page:</strong> Send anyone <code>https://aleksa75.github.io/mouse-battery-control/</code> so they can read what the app does and download straight from GitHub Releases.",
-        share_2: "<strong>Direct Zip link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> to download the latest Windows bundle directly.",
-        share_3: "<strong>Built-in GitHub updates:</strong> New downloads automatically check GitHub Releases for updates and verify SHA-256 checksums without editing any files.",
+        share_2: "<strong>Direct EXE link:</strong> Or share <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.exe</code> to download the 492 KB standalone Windows app directly.",
+        share_3: "<strong>Built-in GitHub updates:</strong> v3.0.0 includes preconfigured GitHub Releases checking via <strong>Check for Updates</strong> and uses Edge WebView2 already built into Windows 10/11.",
       },
       ru: {
         brand_name: "Mouse Battery & Control",
@@ -995,15 +995,15 @@
         nav_github: "GitHub",
         theme_to_light: "☀ Светлая",
         theme_to_dark: "🌙 Тёмная",
-        hero_eyebrow: "Лёгкая утилита для трея Windows",
+        hero_eyebrow: "Нативный Rust-трей + ленивый Edge WebView2",
         hero_title: "Беспроводная мышь больше не разрядится внезапно.",
-        hero_sub: "Небольшая программа без рекламы: показывает заряд мыши прямо в трее рядом с часами, изучает скорость разряда, предупреждает заранее и даёт быстрый доступ к скорости курсора и DPI.",
+        hero_sub: "Сверхлёгкая программа без рекламы: показывает заряд мыши прямо в трее рядом с часами, изучает скорость разряда, предупреждает заранее и даёт быстрый доступ к скорости курсора и настройкам Logitech HID++.",
         hero_download: `Скачать с GitHub (${APP_VERSION})`,
         hero_how: "Как установить",
         chip_win: "Windows 10 / 11 (64-bit)",
-        chip_size: "~19.6 МБ портативный .zip",
+        chip_size: "492 КБ один .exe",
         chip_noacct: "Без регистрации",
-        chip_local: "Бесплатно и локально",
+        chip_local: "Локально и ~2.5 МБ ОЗУ",
         mock_calibrated: "Откалибровано",
         mock_active: "Активна",
         mock_time_k: "Осталось",
@@ -1014,30 +1014,30 @@
         feat_title: "Что умеет программа",
         feat_sub: "Тихо работает в системном трее без тяжёлых драйверных комбайнов и обязательных аккаунтов.",
         f1_title: "Заряд прямо в трее",
-        f1_desc: "Цветной значок с процентом заряда рядом с часами Windows и мгновенным отображением зарядки.",
+        f1_desc: "Цветной значок с процентом заряда в трее Windows (~2.5 МБ ОЗУ при сворачивании; окно WebView2 полностью выгружается при закрытии).",
         f2_title: "Умный прогноз и здоровье батареи",
-        f2_desc: "Запоминает реальные сессии использования, строит график истории и даёт экспериментальную оценку здоровья аккумулятора.",
+        f2_desc: "Запоминает реальные сессии использования, строит чёткий масштабируемый график за 24ч / 7д / 30д и оценивает здоровье аккумулятора.",
         f3_title: "Своевременные уведомления",
         f3_desc: "Отправляет системные уведомления Windows при низком или критическом заряде, или если заряда не хватит до вечера.",
         f4_title: "Управление мышью и Logitech",
-        f4_desc: "Настройка скорости курсора, прокрутки и кнопок Windows для любой мыши — плюс DPI, частота опроса и встроенная память для мышей Logitech HID++.",
-        f5_title: "Тёмная, светлая темы и акцент Windows",
-        f5_desc: "Подстраивается под тему и цвет акцента Windows, поддерживает перетаскивание вкладок и переключение EN / RU.",
-        f6_title: "Мгновенный запуск, DPAPI и опции",
-        f6_desc: "Запускается из распакованной папки без %TEMP%, шифрует токены Google Drive через Windows DPAPI и ищет иконки онлайн только с вашего согласия.",
+        f4_desc: "Скорость курсора, прокрутка, инверсия кнопок и авто-ускорение для игр на любой мыши — плюс DPI, частота опроса, LIGHTSYNC RGB и профили памяти для Logitech HID++ 2.0.",
+        f5_title: "Темы и комплементарные акценты",
+        f5_desc: "Темы Тёмная, Светлая, Matrix и Система, подбор акцента Windows и комплементарного цвета, перетаскивание вкладок и переключение EN / RU.",
+        f6_title: "Без лишнего веса, бэкап и диагностика",
+        f6_desc: "Один файл 492 КБ на Rust без папок и рантаймов, атомарный экспорт/импорт настроек в JSON, живая диагностика ОЗУ и времени простоя.",
         inst_title: "Как скачать и установить",
-        inst_sub: "Займёт меньше 30 секунд — без сложных установщиков.",
+        inst_sub: "Займёт 15 секунд — один файл 492 КБ без установщиков и распаковки архивов.",
         s1_num: "Шаг 1",
         s1_title: "Скачайте с GitHub Releases",
-        s1_desc: 'Нажмите <strong>Скачать с GitHub</strong> выше (или откройте <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">страницу последнего релиза</a>), чтобы сохранить <code>MouseBatteryControl.zip</code> (~19.6 МБ). Сверьте SHA-256:',
+        s1_desc: 'Нажмите <strong>Скачать с GitHub</strong> выше (или откройте <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">страницу последнего релиза</a>), чтобы сохранить <code>MouseBatteryControl.exe</code> (492 КБ). Сверьте SHA-256:',
         copy_btn: "Копировать",
         copied_btn: "Скопировано!",
         s2_num: "Шаг 2",
-        s2_title: "Распакуйте папку",
-        s2_desc: "Нажмите правой кнопкой по <code>MouseBatteryControl.zip</code> → <strong>Извлечь всё…</strong> в постоянную папку (например, <code>Documents\\MouseBatteryControl</code>). Не разделяйте <code>MouseBatteryControl.exe</code> и папку <code>_internal</code>.",
+        s2_title: "Поместите в постоянную папку",
+        s2_desc: "Перенесите <code>MouseBatteryControl.exe</code> в удобную папку (например, <code>Documents\\MouseBatteryControl</code>). Распаковка архива и дополнительные библиотеки не нужны.",
         s3_num: "Шаг 3",
         s3_title: "Запустите MouseBatteryControl.exe",
-        s3_desc: "Дважды кликните <code>MouseBatteryControl.exe</code> в распакованной папке — откроется окно программы и появится значок в трее.",
+        s3_desc: "Дважды кликните <code>MouseBatteryControl.exe</code> — откроется окно WebView2 и появится значок в трее. При закрытии окна рендерер выгружается из памяти.",
         s4_num: "Шаг 4",
         s4_title: "Автозапуск с Windows (по желанию)",
         s4_desc: "Во вкладке <strong>Уведомления</strong> включите <strong>Запускать с Windows</strong>, чтобы программа сама стартовала при включении ПК.",
@@ -1045,19 +1045,19 @@
         ss_desc: "Поскольку это бесплатная личная утилита без платного сертификата Microsoft, Windows при первом запуске может показать <em>«Система Windows защитила ваш компьютер»</em>. Убедитесь, что SHA-256 совпадает с суммой выше и файл скачан с GitHub, затем нажмите <strong>Подробнее</strong> → <strong>Выполнить в любом случае</strong>.",
         faq_title: "Частые вопросы",
         q1_t: "Подойдёт ли программа для любой беспроводной мыши?",
-        q1_a: "Поддерживаются Bluetooth / BLE мыши (передающие уровень заряда через стандартный Windows GATT Battery Service) и мыши Logitech (через G HUB или приёмник USB). Для обычных проводных/USB-мышей доступны настройки курсора и прокрутки Windows, а для Logitech HID++ — также DPI, частота опроса и встроенные профили.",
+        q1_a: "Поддерживаются беспроводные мыши Logitech (через G HUB или напрямую через USB / Lightspeed HID++), а настройки курсора, прокрутки, кнопок и игрового ускорения работают с любой мышью Windows; модели Logitech HID++ 2.0 также открывают DPI, частоту опроса, LIGHTSYNC RGB и профили памяти.",
         q2_t: "Она не нагружает ПК и не мешает играм?",
-        q2_a: "Нет. Между редкими проверками программа спит и почти не тратит ресурсы процессора, а распакованная версия запускается сразу без распаковки временных файлов.",
+        q2_a: "Нет. Приложение написано на нативном Rust с ленивой выгрузкой WebView2: после закрытия окна браузерный процесс выгружается полностью, а фоновый значок в трее занимает около ~2.5 МБ ОЗУ.",
         q3_t: "Куда-то отправляются мои данные?",
-        q3_a: "По умолчанию ничего не отправляется. Настройки, история и журнал лежат только локально; синхронизация Google Drive и поиск иконок на Wikimedia Commons отключены по умолчанию (а токены Drive шифруются через Windows DPAPI).",
+        q3_a: "Нет. Настройки и история заряда хранятся только локально в вашей папке (config.json и history.jsonl) с атомарной записью. Поиск иконок онлайн отключён по умолчанию.",
         q4_t: "Как обновлять программу?",
-        q4_a: 'Автообновление с <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a> уже настроено «из коробки» — ничего править в <code>config.json</code> не нужно, просто нажмите <strong>Проверить обновления</strong> в программе (с проверкой SHA-256).',
+        q4_a: 'Проверка обновлений с <a href="https://github.com/Aleksa75/mouse-battery-control/releases" target="_blank" rel="noopener">GitHub Releases</a> уже настроена «из коробки» — нажмите <strong>Проверить обновления</strong> во вкладке <strong>Синхронизация и бэкап</strong>.',
         foot_left: `Mouse Battery & Control ${APP_VERSION} — Для Windows 10 и 11`,
         foot_links: '<a href="https://github.com/Aleksa75/mouse-battery-control" target="_blank" rel="noopener">Репозиторий GitHub</a> • <a href="https://github.com/Aleksa75/mouse-battery-control/releases/latest" target="_blank" rel="noopener">Последний релиз</a>',
         share_title: "Хотите поделиться программой?",
-        share_1: "<strong>Поделитесь этой страницей:</strong> Отправьте ссылку <code>https://aleksa75.github.io/mouse-battery-control/</code>, чтобы человек увидел описание и скачал архив с GitHub Releases.",
-        share_2: "<strong>Прямая ссылка на ZIP:</strong> Или отправьте <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.zip</code> для мгновенного скачивания.",
-        share_3: "<strong>Автообновление из коробки:</strong> Скачанная с GitHub версия уже настроена на проверку релизов и SHA-256 без правки конфигов.",
+        share_1: "<strong>Поделитесь этой страницей:</strong> Отправьте ссылку <code>https://aleksa75.github.io/mouse-battery-control/</code>, чтобы человек увидел описание и скачал программу с GitHub Releases.",
+        share_2: "<strong>Прямая ссылка на EXE:</strong> Или отправьте <code>https://github.com/Aleksa75/mouse-battery-control/releases/latest/download/MouseBatteryControl.exe</code> для мгновенного скачивания файла 492 КБ.",
+        share_3: "<strong>Проверка обновлений из коробки:</strong> v3.0.0 проверяет новые релизы на GitHub по кнопке <strong>Проверить обновления</strong> и использует встроенный в Windows 10/11 Edge WebView2.",
       },
     };
 
@@ -1122,7 +1122,7 @@
     }
 
     document.getElementById("download-btn").setAttribute("href", DOWNLOAD_URL);
-    document.getElementById("sha-value").textContent = ZIP_SHA256;
+    document.getElementById("sha-value").textContent = EXE_SHA256;
 
     document.getElementById("lang-btn").addEventListener("click", () => {
       applyLanguage(currentLang === "en" ? "ru" : "en");
@@ -1150,10 +1150,10 @@
         }, 1600);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(ZIP_SHA256).then(showCopied).catch(() => {});
+        navigator.clipboard.writeText(EXE_SHA256).then(showCopied).catch(() => {});
       } else {
         const tmp = document.createElement("textarea");
-        tmp.value = ZIP_SHA256;
+        tmp.value = EXE_SHA256;
         document.body.appendChild(tmp);
         tmp.select();
         try {

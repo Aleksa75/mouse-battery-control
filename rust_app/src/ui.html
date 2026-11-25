@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="Dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mouse Battery &amp; Control v3.0.0</title>
+<style>
+  :root, [data-theme="Dark"] {
+    --bg: #0F1117;
+    --card: #171A23;
+    --card-alt: #1F2430;
+    --border: #2A3040;
+    --fg: #F3F4F6;
+    --muted: #94A3B8;
+    --accent: #38BDF8;
+    --accent-hover: #0EA5E9;
+    --accent-text: #0B1120;
+    --comp: #FB923C;
+    --comp-soft: #2B1D14;
+    --green: #22C55E;
+    --amber: #F59E0B;
+    --red: #F87171;
+    --chart-fill: rgba(56, 189, 248, 0.16);
+    --seg-sel: #0369A1;
+    --sw-off: #475569;
+    --sw-knob: #F8FAFC;
+  }
+  [data-theme="Light"] {
+    --bg: #F0F4F9;
+    --card: #FFFFFF;
+    --card-alt: #E9EEF6;
+    --border: #DCE3EE;
+    --fg: #1F1F1F;
+    --muted: #444746;
+    --accent: #0B57D0;
+    --accent-hover: #0842A0;
+    --accent-text: #FFFFFF;
+    --comp: #C25E00;
+    --comp-soft: #FFF1E0;
+    --green: #146C2E;
+    --amber: #9A5400;
+    --red: #B3261E;
+    --chart-fill: rgba(11, 87, 208, 0.14);
+    --seg-sel: #D3E3FD;
+    --sw-off: #747775;
+    --sw-knob: #FFFFFF;
+  }
+  [data-theme="Matrix"] {
+    --bg: #040A06;
+    --card: #08140C;
+    --card-alt: #0F2416;
+    --border: #1B4328;
+    --fg: #DCFCE7;
+    --muted: #6EE7B7;
+    --accent: #22C55E;
+    --accent-hover: #16A34A;
+    --accent-text: #041208;
+    --comp: #E879F9;
+    --comp-soft: #241029;
+    --green: #4ADE80;
+    --amber: #FACC15;
+    --red: #F87171;
+    --chart-fill: rgba(34, 197, 94, 0.18);
+    --seg-sel: #166534;
+    --sw-off: #2D6A42;
+    --sw-knob: #DCFCE7;
+  }
+  * { box-sizing: border-box; user-select: none; }
+  body {
+    margin: 0;
+    padding: 14px 18px 10px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; position: relative; }
+  .title-row { display: flex; align-items: center; gap: 8px; }
+  .title { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  .badge {
+    padding: 2px 8px; border-radius: 7px; font-size: 11px; font-weight: 600;
+    background: var(--comp-soft); color: var(--comp); border: 1px solid var(--comp);
+  }
+  .dev-pill {
+    margin-top: 5px; display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 8px; background: var(--card); border: 1px solid var(--border);
+    color: var(--fg); font-size: 11.5px; font-weight: 600; cursor: pointer;
+  }
+  .dev-pill:hover { border-color: var(--accent); }
+  .hdr-right { display: flex; align-items: center; gap: 6px; position: relative; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--card); color: var(--fg);
+    border-radius: 9px; padding: 6px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+  .btn-primary {
+    border: 0; background: var(--accent); color: var(--accent-text);
+    font-size: 12px; font-weight: 700; padding: 7px 13px; border-radius: 9px; cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-sec {
+    border: 1px solid var(--border); background: var(--card-alt); color: var(--fg);
+    font-size: 11.5px; font-weight: 600; padding: 6px 11px; border-radius: 9px; cursor: pointer;
+  }
+  .btn-sec:hover { border-color: var(--accent); }
+  .menu-pop {
+    position: absolute; top: 36px; right: 0; z-index: 60; min-width: 210px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 11px;
+    padding: 5px; box-shadow: 0 10px 28px rgba(0,0,0,0.35); display: none;
+  }
+  .menu-pop.left { right: auto; left: 0; top: 58px; }
+  .menu-pop.open { display: block; }
+  .menu-item {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    border: 0; background: transparent; color: var(--fg); text-align: left;
+    padding: 7px 10px; border-radius: 7px; font-size: 12px; cursor: pointer;
+  }
+  .menu-item:hover { background: var(--card-alt); }
+  .menu-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+
+  .tabs {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 3px; gap: 3px;
+  }
+  .tabs button {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 12.5px; font-weight: 600; padding: 7px 4px; border-radius: 8px; cursor: grab;
+  }
+  .tabs button.active { background: var(--seg-sel); color: var(--fg); }
+
+  .panel { display: none; flex: 1; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+  .panel.active { display: flex; }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 13px 15px; }
+  .hero { display: flex; align-items: center; gap: 16px; padding: 14px 16px; }
+  .mouse-art { width: 66px; height: 96px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .ring-wrap { position: relative; width: 116px; height: 116px; flex-shrink: 0; }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .pct-big { font-size: 27px; font-weight: 800; line-height: 1.05; }
+  .pct-sub { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 0.6px; margin-top: 2px; }
+  .dev-name { font-size: 17.5px; font-weight: 700; margin-bottom: 7px; }
+  .pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .pill {
+    padding: 4px 9px; border-radius: 8px; background: var(--card-alt);
+    font-size: 11px; font-weight: 600; border: 1px solid transparent;
+  }
+  .pill.click { cursor: pointer; }
+  .pill.click:hover { border-color: var(--comp); }
+  .muted { color: var(--muted); font-size: 12px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .metric-card { padding: 10px 12px; }
+  .metric-k { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .metric-v { font-size: 15.5px; font-weight: 700; white-space: nowrap; }
+
+  .chart-card { flex: 1; display: flex; flex-direction: column; min-height: 210px; padding: 12px 14px; }
+  .chart-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+  .seg { display: inline-flex; background: var(--card-alt); border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 7px; cursor: pointer; }
+  .seg button.active { background: var(--seg-sel); color: var(--fg); }
+  .chart-box { position: relative; flex: 1; min-height: 0; width: 100%; height: 100%; }
+  #chartSvg { display: block; width: 100%; height: 100%; }
+
+  .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .preset {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 13px;
+    padding: 11px; text-align: left; color: var(--fg); cursor: pointer;
+  }
+  .preset.active { background: var(--comp-soft); border-color: var(--comp); }
+  .preset.active .preset-t { color: var(--comp); }
+  .preset-t { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .preset-s { font-size: 11px; color: var(--muted); }
+
+  .row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; }
+  .ctrl-row { display: flex; flex-direction: column; gap: 4px; margin: 7px 0; }
+  .ctrl-top { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 5px; }
+  select {
+    background: var(--card-alt); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 9px; font-size: 12px; font-weight: 600;
+  }
+  .switch {
+    position: relative; width: 44px; height: 24px; border-radius: 12px;
+    background: var(--sw-off); border: 0; cursor: pointer; padding: 0; flex-shrink: 0;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--sw-knob); transition: transform 0.14s;
+  }
+  .switch.on::after { transform: translateX(20px); }
+
+  .dpi-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .dpi-chip {
+    padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card-alt); color: var(--fg); font-size: 11.5px; font-weight: 700; cursor: pointer;
+  }
+  .dpi-chip.active { background: var(--comp-soft); border-color: var(--comp); color: var(--comp); }
+  .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; }
+  .swatch.active { border-color: var(--fg); transform: scale(1.1); }
+
+  .footer {
+    font-size: 11px; color: var(--muted); display: flex;
+    justify-content: space-between; align-items: center; padding-top: 2px;
+  }
+  .toast-bar {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--card-alt); color: var(--fg); border: 1px solid var(--accent);
+    padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 600;
+    display: none; z-index: 80; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.58); z-index: 90;
+    display: none; align-items: center; justify-content: center; padding: 18px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 520px; max-height: 86vh; overflow-y: auto;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title-row">
+        <div class="title" id="tTitle">Mouse Battery &amp; Control</div>
+        <span class="badge" id="verBadge">v3.0.0 &bull; Rust + WebView2</span>
+      </div>
+      <button class="dev-pill" id="devBtn" onclick="toggleMenu('devMenu')">
+        <span id="devPillText">G502 X PLUS</span> &#9662;
+      </button>
+      <div class="menu-pop left" id="devMenu"></div>
+    </div>
+
+    <div class="hdr-right">
+      <div class="seg" id="quickThemeSeg">
+        <button data-qtheme="Dark">Dark</button>
+        <button data-qtheme="Light">Light</button>
+        <button data-qtheme="Matrix">Matrix</button>
+      </div>
+      <button class="icon-btn" id="btnLang" onclick="toggleLang()">EN</button>
+      <button class="icon-btn" onclick="toggleMenu('toolsMenu')">&#9881;</button>
+      <button class="btn-primary" id="btnRefresh" onclick="post('refresh')">Refresh</button>
+      <div class="menu-pop" id="toolsMenu">
+        <button class="menu-item" onclick="closeMenus();post('test_toast')" id="mTestNotify">Send Test Notification</button>
+        <button class="menu-item" onclick="closeMenus();post('refresh')" id="mRefresh">Refresh Battery Now</button>
+        <button class="menu-item" onclick="closeMenus();post('open_folder')" id="mOpenFolder">Open App Folder</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" onclick="closeMenus();openModal('aboutModal')" id="mAbout">About &amp; Diagnostics</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabBar"></div>
+
+  <!-- TAB 0: DASHBOARD -->
+  <div class="panel active" id="panel_Dashboard">
+    <div class="card hero">
+      <div class="mouse-art">
+        <svg viewBox="0 0 64 96" width="58" height="88">
+          <rect x="12" y="8" width="40" height="80" rx="20" fill="var(--card-alt)" stroke="var(--accent)" stroke-width="2.2"/>
+          <line x1="32" y1="8" x2="32" y2="38" stroke="var(--border)" stroke-width="2"/>
+          <rect x="28" y="18" width="8" height="14" rx="4" fill="var(--comp)"/>
+          <path d="M 22 68 Q 32 76 42 68" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 116 116" width="116" height="116">
+          <circle cx="58" cy="58" r="48" fill="none" stroke="var(--card-alt)" stroke-width="10"></circle>
+          <circle id="ringArc" cx="58" cy="58" r="48" fill="none" stroke="var(--green)" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="301.59" stroke-dashoffset="27"
+                  transform="rotate(-90 58 58)"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="pct-big" id="heroPct">91%</div>
+          <div class="pct-sub" id="heroSub">BATTERY</div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="dev-name" id="devName">G502 X PLUS</div>
+        <div class="pill-row">
+          <span class="pill" style="color:var(--accent)" id="connBadge">LIGHTSPEED</span>
+          <span class="pill" style="color:var(--green)" id="eveningBadge">Will last past 22:00</span>
+          <span class="pill click" style="color:var(--comp);background:var(--comp-soft)" id="learnPill" onclick="openModal('learnedModal')">Learning</span>
+        </div>
+        <div class="muted" id="heroMeta">Source: History &bull; Low 20% &bull; Critical 10%</div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="card metric-card">
+        <div class="metric-k" id="kRem">Battery Remaining</div>
+        <div class="metric-v" id="vRem">~57.3 h</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-k" id="kDrain">Usage Drain Rate</div>
+        <div class="metric-v" style="color:var(--comp)" id="vDrain">1.50 %/hr</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-k" id="kPower">Est. Power Draw</div>
+        <div class="metric-v" id="vPower">~14 mW</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-k" id="kIdle">Idle Time</div>
+        <div class="metric-v" id="vIdle">0 s</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-hdr">
+        <strong style="font-size:13px" id="tChartTitle">Battery History</strong>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="seg" id="rangeSeg">
+            <button data-range="24h">24h</button>
+            <button data-range="7d">7d</button>
+            <button data-range="30d" class="active">30d</button>
+          </div>
+          <button class="btn-sec" id="btnResetZoom" onclick="chartZoom=1;renderChart()">Reset Zoom</button>
+        </div>
+      </div>
+      <div class="chart-box" id="chartBox">
+        <svg id="chartSvg"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: NOTIFICATIONS & APPEARANCE -->
+  <div class="panel" id="panel_Notifications">
+    <div class="card">
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lNotifEn">Enable Battery Notifications</span>
+        <button class="switch on" id="swNotify" onclick="post('toggle',{key:'notifications_enabled'})"></button>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lCloseTray">Close to System Tray</span>
+        <button class="switch on" id="swTray" onclick="post('toggle',{key:'close_to_tray'})"></button>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lAutoStart">Start Automatically with Windows</span>
+        <button class="switch" id="swAuto" onclick="post('toggle',{key:'autostart'})"></button>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lSound">Notification Sound</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="selSound" onchange="post('set_cfg',{key:'notification_sound',value:this.value})">
+            <option>Default</option><option>Reminder</option><option>Alarm</option>
+            <option>Chime</option><option>Mail</option><option>Silent</option>
+          </select>
+          <button class="btn-sec" id="btnPreviewSnd" onclick="post('test_toast')">Preview</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lTheme">Appearance Theme</span>
+        <div class="seg" id="themeSeg">
+          <button data-theme="System">System</button>
+          <button data-theme="Dark">Dark</button>
+          <button data-theme="Light">Light</button>
+          <button data-theme="Matrix">Matrix</button>
+        </div>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lAccentMode">Accent Color</span>
+        <div class="seg" id="accentSeg">
+          <button data-acc="Windows">Windows</button>
+          <button data-acc="Default">Default</button>
+        </div>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lCompAcc">Complementary Palette Accents</span>
+        <button class="switch on" id="swComp" onclick="post('toggle',{key:'complementary_accent'})"></button>
+      </div>
+      <div class="row-between">
+        <span style="font-size:13px;font-weight:600" id="lLang">Language</span>
+        <div class="seg" id="langSeg">
+          <button data-lang="en">English</button>
+          <button data-lang="ru">Русский</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lEven">Evening Target Hour</span><span id="vEven" style="color:var(--accent)">22:00</span></div>
+        <input type="range" id="rEven" min="16" max="23" onchange="post('set_cfg',{key:'evening_hour',value:+this.value})" oninput="vEven.textContent=this.value.padStart(2,'0')+':00'">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lLow">Low Battery Warning</span><span id="vLow" style="color:var(--amber)">20%</span></div>
+        <input type="range" id="rLow" min="5" max="50" onchange="post('set_cfg',{key:'low_battery_threshold',value:+this.value})" oninput="vLow.textContent=this.value+'%'">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lCrit">Critical Battery Warning</span><span id="vCrit" style="color:var(--red)">10%</span></div>
+        <input type="range" id="rCrit" min="5" max="30" onchange="post('set_cfg',{key:'critical_battery_threshold',value:+this.value})" oninput="vCrit.textContent=this.value+'%'">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lCool">Notification Cooldown</span><span id="vCool" style="color:var(--accent)">60 min</span></div>
+        <input type="range" id="rCool" min="5" max="180" step="5" onchange="post('set_cfg',{key:'cooldown_minutes',value:+this.value})" oninput="vCool.textContent=this.value+' min'">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lPoll">Background Check Interval</span><span id="vPoll" style="color:var(--comp)">5 min</span></div>
+        <input type="range" id="rPoll" min="1" max="30" onchange="post('set_cfg',{key:'poll_interval_minutes',value:+this.value})" oninput="vPoll.textContent=this.value+' min'">
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: MOUSE CONTROL -->
+  <div class="panel" id="panel_Mouse Control">
+    <div class="presets">
+      <button class="preset" id="preGaming" onclick="post('preset',{name:'gaming'})">
+        <div class="preset-t" id="tPreG">Gaming</div>
+        <div class="preset-s" id="sPreG">Raw input &bull; Accel OFF</div>
+      </button>
+      <button class="preset" id="prePrecision" onclick="post('preset',{name:'precision'})">
+        <div class="preset-t" id="tPreP">Precision</div>
+        <div class="preset-s" id="sPreP">Fine control &bull; Accel OFF</div>
+      </button>
+      <button class="preset" id="preProd" onclick="post('preset',{name:'productivity'})">
+        <div class="preset-t" id="tPrePr">Productivity</div>
+        <div class="preset-s" id="sPrePr">Fast travel &bull; Accel ON</div>
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lSpd">Pointer Speed (1-20)</span><span id="vSpd" style="color:var(--accent)">10</span></div>
+        <input type="range" id="rSpd" min="1" max="20" onchange="post('mouse_spd',{value:+this.value})" oninput="vSpd.textContent=this.value">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-top"><span id="lScr">Scroll Wheel Lines per Notch</span><span id="vScr" style="color:var(--accent)">3</span></div>
+        <input type="range" id="rScr" min="1" max="20" onchange="post('mouse_scr',{value:+this.value})" oninput="vScr.textContent=this.value">
+      </div>
+      <div class="row-between">
+        <span style="font-size:12.5px;font-weight:600" id="lAcc">Mouse Acceleration</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="seg" id="accSeg">
+            <button data-am="Off">Off</button>
+            <button data-am="Auto">Auto</button>
+            <button data-am="On">On</button>
+          </div>
+          <button class="btn-sec" id="btnAddGame" onclick="post('add_game')">+ Game</button>
+        </div>
+      </div>
+      <div class="row-between">
+        <span style="font-size:12.5px;font-weight:600" id="lSwap">Swap Primary &amp; Secondary Buttons</span>
+        <button class="switch" id="swSwap" onclick="post('toggle',{key:'swap_buttons'})"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between" style="padding-top:0">
+        <div>
+          <strong style="font-size:13.5px" id="tHidTitle">DPI Speeds &amp; Report Rate</strong>
+          <span class="pill" id="hidBadge" style="margin-left:6px;color:var(--green)">HID++ Live</span>
+        </div>
+        <button class="btn-sec" id="btnOpenGhub" onclick="post('lghub')">Open G HUB</button>
+      </div>
+      <div id="hidControlsBody">
+        <div class="row-between">
+          <span style="font-size:12px;font-weight:600" id="lMode">Mouse Mode</span>
+          <div class="seg" id="modeSeg">
+            <button data-mode="onboard">Onboard</button>
+            <button data-mode="host">Host</button>
+          </div>
+        </div>
+        <div class="row-between">
+          <span style="font-size:12px;font-weight:600" id="lSlot">Onboard Profile</span>
+          <div class="seg" id="slotSeg"></div>
+        </div>
+        <div style="margin:6px 0">
+          <div style="font-size:12px;font-weight:600;display:flex;justify-content:space-between">
+            <span id="lDpi">Hardware DPI</span>
+            <span id="vDpi" style="color:var(--comp)">--</span>
+          </div>
+          <div class="dpi-row" id="dpiRow"></div>
+        </div>
+        <div class="row-between">
+          <span style="font-size:12px;font-weight:600" id="lRate">Report Rate (Polling)</span>
+          <div class="seg" id="rateSeg">
+            <button data-hz="1000">1000 Hz</button>
+            <button data-hz="500">500 Hz</button>
+            <button data-hz="250">250 Hz</button>
+            <button data-hz="125">125 Hz</button>
+          </div>
+        </div>
+        <div class="row-between">
+          <span style="font-size:12px;font-weight:600" id="lRgb">LIGHTSYNC RGB</span>
+          <div class="seg" id="rgbSeg">
+            <button data-rgb="Off (Eco)">Off</button>
+            <button data-rgb="Fixed">Fixed</button>
+            <button data-rgb="Breathing">Breathing</button>
+            <button data-rgb="Cycle">Cycle</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span class="muted" id="lColor">Color:</span>
+          <div id="swatchRow" style="display:flex;gap:8px"></div>
+        </div>
+      </div>
+      <div id="hidUnavailMsg" class="muted" style="display:none;padding:8px 0"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SYNC & BACKUP + DIAGNOSTICS -->
+  <div class="panel" id="panel_Sync & Backup">
+    <div class="card">
+      <strong style="font-size:14px" id="tLocalPrefs">Local Preferences</strong>
+      <div class="muted" style="margin:4px 0 10px" id="tLocalDesc">Settings auto-save atomically to config.json. Export or import a backup anytime.</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" id="btnExport" onclick="post('export_cfg')">Export Preferences (.json)</button>
+        <button class="btn-sec" id="btnImport" onclick="post('import_cfg')">Import Preferences (.json)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between" style="padding:0">
+        <div>
+          <strong style="font-size:13.5px" id="tOnlineIcons">Online Mouse Icons (Opt-In)</strong>
+          <div class="muted" style="margin-top:3px" id="tOnlineHint">Off by default for privacy. Looks up Wikimedia icon only when enabled.</div>
+        </div>
+        <button class="switch" id="swIcons" onclick="post('toggle',{key:'auto_fetch_mouse_icons'})"></button>
+      </div>
+    </div>
+
+    <div class="card" style="flex:1">
+      <div class="row-between" style="padding-top:0">
+        <strong style="font-size:15px" id="tDiagTitle">Runtime Diagnostics &amp; Updates</strong>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:8px;background:var(--comp-soft);font-size:11px;font-weight:600">
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--comp);display:inline-block"></span>
+          <span>Accent &harr; Complement</span>
+        </span>
+      </div>
+      <div class="muted" style="margin:4px 0" id="diagExe">EXE Size: --</div>
+      <div class="muted" style="margin:4px 0" id="diagHost">Host RAM: --</div>
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:4px 0" id="diagChild">WebView2 Child RAM: --</div>
+      <div style="font-size:12px;font-weight:700;margin:4px 0" id="diagTotal">Total Active RAM: --</div>
+      <div style="font-size:12px;font-weight:600;color:var(--comp);margin:4px 0" id="diagLaunch">UI Ready Time: --</div>
+      <div class="row-between" style="margin-top:8px;padding-bottom:0">
+        <span class="muted" id="updStatus">Version 3.0.0 (GitHub Release source)</span>
+        <button class="btn-primary" id="btnCheckUpd" onclick="post('check_update')">Check for Updates</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="footLeft">Mouse Battery &amp; Control v3.0.0</span>
+    <span id="footRight">Host RAM: --</span>
+  </div>
+
+  <div class="toast-bar" id="toastBar"></div>
+
+  <!-- LEARNED SO FAR + BATTERY HEALTH MODAL -->
+  <div class="modal-bg" id="learnedModal" onclick="if(event.target===this)closeModals()">
+    <div class="modal">
+      <div class="row-between" style="padding-top:0">
+        <strong style="font-size:16px" id="mLearnedTitle">Learned So Far</strong>
+        <button class="btn-sec" onclick="closeModals()">Close</button>
+      </div>
+      <div id="learnedBody" class="muted" style="line-height:1.55"></div>
+    </div>
+  </div>
+
+  <!-- ABOUT MODAL -->
+  <div class="modal-bg" id="aboutModal" onclick="if(event.target===this)closeModals()">
+    <div class="modal">
+      <div class="row-between" style="padding-top:0">
+        <strong style="font-size:16px" id="mAboutTitle">About Mouse Battery &amp; Control</strong>
+        <button class="btn-sec" onclick="closeModals()">Close</button>
+      </div>
+      <div id="aboutBody" class="muted" style="line-height:1.55"></div>
+    </div>
+  </div>
+
+<script>
+  const DPI_STAGES = [800, 1200, 1600, 2400, 3200];
+  const RGB_SWATCHES = ['#38BDF8', '#22C55E', '#A855F7', '#EF4444', '#F59E0B', '#F8FAFC'];
+  const I18N = {
+    en: {
+      title: 'Mouse Battery & Control', refresh: 'Refresh', battery: 'BATTERY', charging: 'CHARGING',
+      kRem: 'Battery Remaining', kDrain: 'Usage Drain Rate', kPower: 'Est. Power Draw', kIdle: 'Idle Time',
+      chart: 'Battery History', resetZoom: 'Reset Zoom',
+      tabs: {'Dashboard':'Dashboard','Notifications':'Notifications','Mouse Control':'Mouse Control','Sync & Backup':'Sync & Backup'}
+    },
+    ru: {
+      title: 'Батарея и управление мышью', refresh: 'Обновить', battery: 'БАТАРЕЯ', charging: 'ЗАРЯДКА',
+      kRem: 'Остаток заряда', kDrain: 'Скорость разряда', kPower: 'Расход энергии', kIdle: 'Простой',
+      chart: 'История заряда', resetZoom: 'Сброс масштаба',
+      tabs: {'Dashboard':'Обзор','Notifications':'Уведомления','Mouse Control':'Мышь','Sync & Backup':'Бэкап'}
+    }
+  };
+
+  let state = null;
+  let activeTab = 'Dashboard';
+  let chartRange = '30d';
+  let chartZoom = 1;
+  let hoverIdx = -1;
+  let chartGeom = { L: 40, R: 526, T: 14, B: 178 };
+  let rgbMode = 'Fixed';
+  let rgbColor = '#38BDF8';
+  let toastTimer = null;
+
+  function post(cmd, payload) {
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage(Object.assign({ cmd }, payload || {}));
+    }
+  }
+  function showToast(msg) {
+    if (!msg) return;
+    const el = document.getElementById('toastBar');
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2600);
+  }
+  function closeMenus() { document.querySelectorAll('.menu-pop').forEach(m => m.classList.remove('open')); }
+  function toggleMenu(id) {
+    const el = document.getElementById(id);
+    const was = el.classList.contains('open');
+    closeMenus();
+    if (!was) el.classList.add('open');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.header')) closeMenus();
+  });
+  function closeModals() { document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('open')); }
+  function openModal(id) {
+    if (!state) return;
+    if (id === 'learnedModal') renderLearnedModal();
+    if (id === 'aboutModal') renderAboutModal();
+    document.getElementById(id).classList.add('open');
+  }
+  function toggleLang() {
+    if (!state) return;
+    post('set_cfg', { key: 'language', value: state.config.language === 'ru' ? 'en' : 'ru' });
+  }
+
+  // Controls listeners
+  document.getElementById('quickThemeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-qtheme]');
+    if (b) post('set_cfg', { key: 'theme', value: b.getAttribute('data-qtheme') });
+  });
+  document.getElementById('themeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-theme]');
+    if (b) post('set_cfg', { key: 'theme', value: b.getAttribute('data-theme') });
+  });
+  document.getElementById('accentSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-acc]');
+    if (b) post('set_cfg', { key: 'accent_mode', value: b.getAttribute('data-acc') });
+  });
+  document.getElementById('langSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-lang]');
+    if (b) post('set_cfg', { key: 'language', value: b.getAttribute('data-lang') });
+  });
+  document.getElementById('accSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-am]');
+    if (b) post('set_cfg', { key: 'accel_mode', value: b.getAttribute('data-am') });
+  });
+  document.getElementById('modeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-mode]');
+    if (b) post('hid_mode', { mode: b.getAttribute('data-mode') });
+  });
+  document.getElementById('rateSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-hz]');
+    if (b) post('hid_rate', { hz: +b.getAttribute('data-hz') });
+  });
+  document.getElementById('rgbSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-rgb]');
+    if (!b) return;
+    rgbMode = b.getAttribute('data-rgb');
+    post('hid_rgb', { mode: rgbMode, color: rgbColor });
+  });
+  document.getElementById('rangeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-range]');
+    if (!b) return;
+    chartRange = b.getAttribute('data-range');
+    document.querySelectorAll('#rangeSeg button').forEach(x => x.classList.toggle('active', x === b));
+    renderChart();
+  });
+
+  // Tab bar with drag-to-reorder & right-click reset
+  let dragTab = null;
+  function renderTabs() {
+    const bar = document.getElementById('tabBar');
+    const order = (state && state.config && state.config.tab_order) || ['Dashboard','Notifications','Mouse Control','Sync & Backup'];
+    const lang = (state && state.config && state.config.language) || 'en';
+    const labels = (I18N[lang] || I18N.en).tabs;
+    bar.innerHTML = '';
+    order.forEach(name => {
+      const btn = document.createElement('button');
+      btn.textContent = labels[name] || name;
+      btn.draggable = true;
+      btn.classList.toggle('active', activeTab === name);
+      btn.onclick = () => {
+        activeTab = name;
+        renderTabs();
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel_' + name));
+        if (name === 'Dashboard') requestAnimationFrame(renderChart);
+      };
+      btn.ondragstart = () => { dragTab = name; };
+      btn.ondragover = (e) => e.preventDefault();
+      btn.ondrop = (e) => {
+        e.preventDefault();
+        if (!dragTab || dragTab === name) return;
+        const next = order.filter(x => x !== dragTab);
+        next.splice(next.indexOf(name), 0, dragTab);
+        dragTab = null;
+        post('set_tab_order', { order: next });
+      };
+      btn.oncontextmenu = (e) => { e.preventDefault(); post('reset_tab_order'); };
+      bar.appendChild(btn);
+    });
+  }
+
+  function renderChart() {
+    const svg = document.getElementById('chartSvg');
+    const box = document.getElementById('chartBox');
+    const W = Math.max(260, Math.floor(box.clientWidth || svg.clientWidth || 540));
+    const H = Math.max(120, Math.floor(box.clientHeight || svg.clientHeight || 200));
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const L = 40, R = W - 14, T = 14, B = H - 18;
+    chartGeom = { L, R, T, B };
+
+    if (!state || !state.history || state.history.length < 2) {
+      svg.innerHTML = `<text x="${W/2}" y="${H/2}" fill="var(--muted)" text-anchor="middle" font-size="12.5">Collecting battery samples...</text>`;
+      return;
+    }
+
+    const now = state.history[state.history.length - 1].ts_sec;
+    const span = chartRange === '24h' ? 86400 : (chartRange === '7d' ? 7 * 86400 : 30 * 86400);
+    let pts = state.history.filter(h => (now - h.ts_sec) <= span / chartZoom);
+    if (pts.length < 2) pts = state.history.slice(-Math.min(state.history.length, 16));
+
+    let html = '';
+    [0, 25, 50, 75, 100].forEach(v => {
+      const y = B - (v / 100) * (B - T);
+      html += `<line x1="${L}" y1="${y}" x2="${R}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+      html += `<text x="34" y="${y + 4}" fill="var(--muted)" text-anchor="end" font-size="10.5">${v}%</text>`;
+    });
+
+    const coords = pts.map((p, i) => {
+      const x = L + (i / (pts.length - 1)) * (R - L);
+      const y = B - (p.pct / 100) * (B - T);
+      return [x, y];
+    });
+    const areaD = `M ${coords[0][0]} ${B} ` + coords.map(c => `L ${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(' ') + ` L ${coords[coords.length - 1][0]} ${B} Z`;
+    const lineD = `M ` + coords.map(c => `${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(' L ');
+    html += `<path d="${areaD}" fill="var(--chart-fill)"/>`;
+    html += `<path d="${lineD}" fill="none" stroke="var(--accent)" stroke-width="2.3"/>`;
+    coords.forEach(c => { html += `<circle cx="${c[0]}" cy="${c[1]}" r="3.1" fill="var(--accent)"/>`; });
+
+    if (hoverIdx >= 0 && hoverIdx < pts.length) {
+      const c = coords[hoverIdx];
+      const s = pts[hoverIdx];
+      html += `<line x1="${c[0]}" y1="${T}" x2="${c[0]}" y2="${B}" stroke="var(--muted)" stroke-width="1"/>`;
+      html += `<circle cx="${c[0]}" cy="${c[1]}" r="5.2" fill="var(--comp)"/>`;
+      const tw = 148, th = 25;
+      const tx = Math.min(R - tw, Math.max(L, c[0] - tw / 2));
+      const ty = Math.max(T, c[1] - 34);
+      html += `<rect x="${tx}" y="${ty}" width="${tw}" height="${th}" rx="7" fill="var(--card-alt)" stroke="var(--comp)"/>`;
+      html += `<text x="${tx + tw / 2}" y="${ty + 16}" fill="var(--fg)" text-anchor="middle" font-size="11" font-weight="600">${Math.round(s.pct)}% &bull; ${s.label}</text>`;
+    }
+    svg.innerHTML = html;
+  }
+
+  document.getElementById('chartSvg').addEventListener('mousemove', (e) => {
+    if (!state || !state.history || state.history.length < 2) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const vx = e.clientX - rect.left;
+    const frac = Math.max(0, Math.min(1, (vx - chartGeom.L) / Math.max(1, chartGeom.R - chartGeom.L)));
+    hoverIdx = Math.round(frac * (state.history.length - 1));
+    renderChart();
+  });
+  document.getElementById('chartSvg').addEventListener('mouseleave', () => { hoverIdx = -1; renderChart(); });
+  document.getElementById('chartBox').addEventListener('wheel', (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    chartZoom = e.deltaY < 0 ? Math.min(8, chartZoom * 1.25) : Math.max(1, chartZoom / 1.25);
+    renderChart();
+  }, { passive: false });
+  window.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(renderChart).observe(document.getElementById('chartBox'));
+
+  function renderLearnedModal() {
+    const h = state.health || {};
+    const sessHtml = (state.recent_sessions || []).map(s =>
+      `<div>${s.end_label}: ${s.start_pct}% &rarr; ${s.end_pct}% (${s.duration_h.toFixed(1)}h, ${s.rate.toFixed(2)}%/hr)</div>`
+    ).join('') || '<div>Collecting discharging sessions...</div>';
+    document.getElementById('learnedBody').innerHTML = `
+      <div style="margin:6px 0"><strong>Cumulative Discharge:</strong> ${state.total_discharge_pct}% / 80% (${Math.min(100, Math.round(state.total_discharge_pct/80*100))}% calibrated)</div>
+      <div><strong>Active Drain Rate:</strong> ${state.drain_rate.toFixed(2)} %/hr (${state.is_learned ? 'Learned from ' + state.sessions_used + ' sessions' : 'Baseline estimate'})</div>
+      <div style="margin:10px 0 4px"><strong>Battery Health (Experimental Estimate):</strong></div>
+      <div>Status: ${h.status} &bull; Charge cycles: ${h.charge_cycles} &bull; Active cycles: ${h.active_cycles}</div>
+      ${h.health_pct ? `<div>Estimated Health: ${h.health_pct}% (~${h.est_capacity_mah} mAh / ${h.est_capacity_mwh} mWh)</div>` : `<div>Needs &ge; 2.0 active cycles (&ge;200% active discharge) to estimate capacity.</div>`}
+      <div style="margin:10px 0 4px"><strong>Recent Sessions:</strong></div>
+      ${sessHtml}
+    `;
+  }
+
+  function renderAboutModal() {
+    const hid = state.hidpp || {};
+    document.getElementById('aboutBody').innerHTML = `
+      <div><strong>Version:</strong> v3.0.0 (Rust Tray Host + Lazy Edge WebView2)</div>
+      <div><strong>Active Mouse:</strong> ${state.device_name} (${state.battery_pct.toFixed(0)}% via ${state.source})</div>
+      <div><strong>Firmware:</strong> ${hid.firmware || 'Unknown'} &bull; <strong>HID++ Live:</strong> ${hid.connected ? 'Active' : 'Unavailable'}</div>
+      <div style="margin-top:8px"><strong>Architecture Highlights:</strong></div>
+      <div>&bull; Memory-safe Rust daemon handles HID++ 2.0, G HUB SQLite, Win32 mouse APIs, and atomic config/history replacement.</div>
+      <div>&bull; WebView2 HTML/CSS/SVG UI unloads cleanly when closed to tray, keeping idle background RAM ~2&ndash;4 MB.</div>
+    `;
+  }
+
+  function applyState(s) {
+    state = s;
+    const cfg = s.config;
+    document.documentElement.setAttribute('data-theme', s.resolved_theme);
+    const L = I18N[cfg.language] || I18N.en;
+
+    // Optional override of complementary accent colors
+    document.documentElement.style.setProperty('--comp', cfg.complementary_accent ? '' : 'var(--accent)');
+    if (s.custom_accent_hex && cfg.accent_mode === 'Windows') {
+      document.documentElement.style.setProperty('--accent', s.custom_accent_hex);
+    } else {
+      document.documentElement.style.removeProperty('--accent');
+    }
+
+    document.getElementById('tTitle').textContent = L.title;
+    document.getElementById('btnRefresh').textContent = L.refresh;
+    document.getElementById('btnLang').textContent = cfg.language.toUpperCase();
+    document.getElementById('kRem').textContent = L.kRem;
+    document.getElementById('kDrain').textContent = L.kDrain;
+    document.getElementById('kPower').textContent = L.kPower;
+    document.getElementById('kIdle').textContent = L.kIdle;
+    document.getElementById('tChartTitle').textContent = L.chart;
+    document.getElementById('btnResetZoom').textContent = chartZoom > 1 ? `Reset (${chartZoom.toFixed(1)}x)` : L.resetZoom;
+
+    document.querySelectorAll('#quickThemeSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-qtheme') === cfg.theme));
+    document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-theme') === cfg.theme));
+    document.querySelectorAll('#accentSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-acc') === cfg.accent_mode));
+    document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === cfg.language));
+    document.querySelectorAll('#accSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-am') === cfg.accel_mode));
+
+    // Device pill + menu
+    document.getElementById('devPillText').textContent = s.device_name;
+    let dm = '';
+    (s.devices || []).forEach(d => {
+      dm += `<button class="menu-item" onclick="closeMenus();post('select_device',{slug:'${d.slug}'})"><span>${d.display_name} (${d.pct}%)</span><span onclick="event.stopPropagation();closeMenus();post('hide_device',{slug:'${d.slug}'})">&#10005;</span></button>`;
+    });
+    dm += `<div class="menu-sep"></div>`;
+    dm += `<button class="menu-item" onclick="closeMenus();post('refresh')">Refresh Connected Mice</button>`;
+    if ((cfg.hidden_devices || []).length > 0) {
+      dm += `<button class="menu-item" onclick="closeMenus();post('restore_hidden')">Restore Hidden (${cfg.hidden_devices.length})</button>`;
+    }
+    document.getElementById('devMenu').innerHTML = dm;
+
+    const pct = Math.round(s.battery_pct);
+    const col = pct <= cfg.critical_battery_threshold ? 'var(--red)' : (pct <= cfg.low_battery_threshold ? 'var(--amber)' : 'var(--green)');
+    const circ = 2 * Math.PI * 48;
+    const arc = document.getElementById('ringArc');
+    arc.style.stroke = col;
+    arc.setAttribute('stroke-dashoffset', (circ * (1 - Math.max(1, Math.min(100, s.battery_pct)) / 100)).toFixed(2));
+    document.getElementById('heroPct').textContent = pct + '%';
+    document.getElementById('heroSub').textContent = s.charging ? L.charging : L.battery;
+    document.getElementById('devName').textContent = s.device_name;
+    document.getElementById('connBadge').textContent = s.connection;
+    const evEl = document.getElementById('eveningBadge');
+    evEl.textContent = s.evening_status === 'charging' ? 'Charging Now' : (s.evening_status === 'wont_last' ? `Won't last till ${String(cfg.evening_hour).padStart(2,'0')}:00` : `Will last past ${String(cfg.evening_hour).padStart(2,'0')}:00`);
+    evEl.style.color = s.evening_status === 'wont_last' ? 'var(--amber)' : 'var(--green)';
+    document.getElementById('learnPill').textContent = s.total_discharge_pct >= 80 ? 'Learned' : (s.total_discharge_pct >= 35 ? 'Calibrating' : 'Learning');
+    document.getElementById('heroMeta').textContent = `Source: ${s.source} \u2022 Low ${cfg.low_battery_threshold}% \u2022 Critical ${cfg.critical_battery_threshold}%`;
+
+    const vr = document.getElementById('vRem');
+    vr.textContent = s.time_left_str;
+    vr.style.color = col;
+    document.getElementById('vDrain').textContent = `${s.drain_rate.toFixed(2)}%/hr`;
+    document.getElementById('vPower').textContent = s.power_mw ? `~${Math.round(s.power_mw)} mW` : '--';
+    document.getElementById('vIdle').textContent = s.idle_seconds < 60 ? `${Math.round(s.idle_seconds)} s` : `${(s.idle_seconds/60).toFixed(1)} m`;
+
+    // Tab 2: Notifications
+    document.getElementById('swNotify').classList.toggle('on', !!cfg.notifications_enabled);
+    document.getElementById('swTray').classList.toggle('on', !!cfg.close_to_tray);
+    document.getElementById('swAuto').classList.toggle('on', !!s.autostart);
+    document.getElementById('swComp').classList.toggle('on', !!cfg.complementary_accent);
+    document.getElementById('selSound').value = cfg.notification_sound;
+    document.getElementById('rEven').value = cfg.evening_hour;
+    document.getElementById('vEven').textContent = String(cfg.evening_hour).padStart(2,'0') + ':00';
+    document.getElementById('rLow').value = cfg.low_battery_threshold;
+    document.getElementById('vLow').textContent = cfg.low_battery_threshold + '%';
+    document.getElementById('rCrit').value = cfg.critical_battery_threshold;
+    document.getElementById('vCrit').textContent = cfg.critical_battery_threshold + '%';
+    document.getElementById('rCool').value = cfg.cooldown_minutes;
+    document.getElementById('vCool').textContent = cfg.cooldown_minutes + ' min';
+    document.getElementById('rPoll').value = cfg.poll_interval_minutes;
+    document.getElementById('vPoll').textContent = cfg.poll_interval_minutes + ' min';
+
+    // Tab 3: Mouse
+    document.getElementById('rSpd').value = s.pointer_speed;
+    document.getElementById('vSpd').textContent = s.pointer_speed;
+    document.getElementById('rScr').value = s.scroll_lines;
+    document.getElementById('vScr').textContent = s.scroll_lines;
+    document.getElementById('swSwap').classList.toggle('on', !!s.swap_buttons);
+    document.getElementById('preGaming').classList.toggle('active', s.pointer_speed===10 && cfg.accel_mode==='Off' && s.scroll_lines===3);
+    document.getElementById('prePrecision').classList.toggle('active', s.pointer_speed===8 && cfg.accel_mode==='Off' && s.scroll_lines===3);
+    document.getElementById('preProd').classList.toggle('active', s.pointer_speed===14 && cfg.accel_mode==='On' && s.scroll_lines===6);
+
+    const hid = s.hidpp || {};
+    const hb = document.getElementById('hidBadge');
+    hb.textContent = hid.connected ? 'HID++ Live' : 'HID++ Unavailable';
+    hb.style.color = hid.connected ? 'var(--green)' : 'var(--muted)';
+    document.getElementById('hidControlsBody').style.display = hid.connected ? 'block' : 'none';
+    document.getElementById('hidUnavailMsg').style.display = hid.connected ? 'none' : 'block';
+    document.getElementById('hidUnavailMsg').textContent = 'Logitech HID++ 2.0 mouse not detected. Windows pointer controls above still apply.';
+    document.getElementById('vDpi').textContent = hid.dpi ? `${hid.dpi} DPI` : '--';
+    document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', (b.getAttribute('data-mode') === 'onboard' ? 1 : 2) === hid.onboard_mode));
+    const ss = document.getElementById('slotSeg');
+    ss.innerHTML = '';
+    for (let i = 1; i <= (hid.profile_count || 5); i++) {
+      const b = document.createElement('button');
+      b.textContent = `S${i}`;
+      b.classList.toggle('active', hid.onboard_profile === i);
+      b.onclick = () => post('hid_slot', { slot: i });
+      ss.appendChild(b);
+    }
+    const dr = document.getElementById('dpiRow');
+    dr.innerHTML = '';
+    DPI_STAGES.forEach((d, idx) => {
+      const b = document.createElement('button');
+      b.className = 'dpi-chip' + (hid.dpi === d ? ' active' : '');
+      b.textContent = `${d}`;
+      b.onclick = () => post('hid_dpi', { dpi: d, stage: idx });
+      dr.appendChild(b);
+    });
+    document.querySelectorAll('#rateSeg button').forEach(b => b.classList.toggle('active', +b.getAttribute('data-hz') === (hid.report_rate_hz || 1000)));
+    document.querySelectorAll('#rgbSeg button').forEach(b => b.classList.toggle('active', b.getAttribute('data-rgb') === rgbMode));
+    const swr = document.getElementById('swatchRow');
+    swr.innerHTML = '';
+    RGB_SWATCHES.forEach(hex => {
+      const b = document.createElement('button');
+      b.className = 'swatch' + (rgbColor === hex ? ' active' : '');
+      b.style.background = hex;
+      b.onclick = () => { rgbColor = hex; post('hid_rgb', { mode: rgbMode, color: hex }); };
+      swr.appendChild(b);
+    });
+
+    // Tab 4: Sync & Diagnostics
+    document.getElementById('swIcons').classList.toggle('on', !!cfg.auto_fetch_mouse_icons);
+    document.getElementById('diagExe').textContent = `Executable Size: ${(s.exe_bytes/1024).toFixed(1)} KB (${s.exe_bytes} bytes)`;
+    document.getElementById('diagHost').textContent = `Host RAM: ${(s.ws_kb/1024).toFixed(2)} MB WS / ${(s.priv_kb/1024).toFixed(2)} MB Priv`;
+    document.getElementById('diagChild').textContent = `WebView2 Child RAM (${s.child_count} procs): ${(s.child_ws_kb/1024).toFixed(2)} MB WS / ${(s.child_priv_kb/1024).toFixed(2)} MB Priv`;
+    const totWs = (s.ws_kb + s.child_ws_kb) / 1024, totPriv = (s.priv_kb + s.child_priv_kb) / 1024;
+    document.getElementById('diagTotal').textContent = `Total Active RAM: ${totWs.toFixed(2)} MB WS / ${totPriv.toFixed(2)} MB Priv`;
+    document.getElementById('diagLaunch').textContent = `WebView2 UI Ready (this launch): ${(s.launch_ms || 0).toFixed(1)} ms`;
+    if (s.update_status) document.getElementById('updStatus').textContent = s.update_status;
+    document.getElementById('footRight').textContent = `Host: ${(s.ws_kb/1024).toFixed(1)} MB  |  Total: ${totWs.toFixed(1)} MB WS`;
+
+    if (s.toast) showToast(s.toast);
+    renderTabs();
+    renderChart();
+  }
+
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener('message', (e) => { if (e && e.data) applyState(e.data); });
+    post('ready');
+  }
+</script>
+</body>
+</html>

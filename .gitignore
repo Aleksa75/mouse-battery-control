@@ -15,3 +15,6 @@ telemetry.jsonl
 telemetry.jsonl.*
 client_secret.json
 google_token.json
+rust_app/*.exe
+rust_app/*.res
+rust_app/*.pdb
