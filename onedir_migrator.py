@@ -13,7 +13,7 @@ from pathlib import Path
 
 import updater
 
-DEFAULT_UPDATE_SOURCE = r"C:\Users\Infer\.gemini\antigravity\scratch\mouse-battery-notifier\releases"
+DEFAULT_UPDATE_SOURCE = "github:Aleksa75/mouse-battery-control"
 
 
 def _show_error(msg: str) -> None:

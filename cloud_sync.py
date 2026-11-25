@@ -6,16 +6,21 @@ Uses Google Drive's private `appDataFolder` scope (drive.appdata) with zero exte
 from __future__ import annotations
 
 import base64
+import ctypes
+import ctypes.wintypes
 import hashlib
 import http.server
 import json
 import secrets
+import sys
 import threading
 import urllib.parse
 import urllib.request
 import webbrowser
 from pathlib import Path
 from typing import Any
+
+import monitor
 
 AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URI = "https://oauth2.googleapis.com/token"
@@ -25,6 +30,92 @@ DRIVE_UPLOAD_URI = "https://www.googleapis.com/upload/drive/v3/files"
 
 SCOPES = "openid email profile https://www.googleapis.com/auth/drive.appdata"
 REMOTE_FILENAME = "mouse_battery_control_config.json"
+_CRYPTPROTECT_UI_FORBIDDEN = 0x01
+
+
+class _DATA_BLOB(ctypes.Structure):
+    _fields_ = [
+        ("cbData", ctypes.wintypes.DWORD),
+        ("pbData", ctypes.POINTER(ctypes.c_ubyte)),
+    ]
+
+
+def _dpapi_protect(data: bytes) -> bytes:
+    """Encrypt bytes with Windows DPAPI (current-user scope)."""
+    if sys.platform != "win32":
+        raise RuntimeError("Windows DPAPI is only supported on Windows.")
+    buf = ctypes.create_string_buffer(data, len(data))
+    blob_in = _DATA_BLOB(len(data), ctypes.cast(buf, ctypes.POINTER(ctypes.c_ubyte)))
+    blob_out = _DATA_BLOB()
+    crypt32 = ctypes.windll.crypt32
+    kernel32 = ctypes.windll.kernel32
+    crypt32.CryptProtectData.argtypes = [
+        ctypes.POINTER(_DATA_BLOB),
+        ctypes.wintypes.LPCWSTR,
+        ctypes.POINTER(_DATA_BLOB),
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.wintypes.DWORD,
+        ctypes.POINTER(_DATA_BLOB),
+    ]
+    crypt32.CryptProtectData.restype = ctypes.wintypes.BOOL
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+
+    if not crypt32.CryptProtectData(
+        ctypes.byref(blob_in),
+        "MouseBatteryControl",
+        None,
+        None,
+        None,
+        _CRYPTPROTECT_UI_FORBIDDEN,
+        ctypes.byref(blob_out),
+    ):
+        raise ctypes.WinError()
+    try:
+        return ctypes.string_at(blob_out.pbData, blob_out.cbData)
+    finally:
+        if blob_out.pbData:
+            kernel32.LocalFree(ctypes.cast(blob_out.pbData, ctypes.c_void_p))
+
+
+def _dpapi_unprotect(cipher: bytes) -> bytes:
+    """Decrypt bytes protected by Windows DPAPI (current-user scope)."""
+    if sys.platform != "win32":
+        raise RuntimeError("Windows DPAPI is only supported on Windows.")
+    buf = ctypes.create_string_buffer(cipher, len(cipher))
+    blob_in = _DATA_BLOB(len(cipher), ctypes.cast(buf, ctypes.POINTER(ctypes.c_ubyte)))
+    blob_out = _DATA_BLOB()
+    crypt32 = ctypes.windll.crypt32
+    kernel32 = ctypes.windll.kernel32
+    crypt32.CryptUnprotectData.argtypes = [
+        ctypes.POINTER(_DATA_BLOB),
+        ctypes.POINTER(ctypes.wintypes.LPWSTR),
+        ctypes.POINTER(_DATA_BLOB),
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.wintypes.DWORD,
+        ctypes.POINTER(_DATA_BLOB),
+    ]
+    crypt32.CryptUnprotectData.restype = ctypes.wintypes.BOOL
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+
+    if not crypt32.CryptUnprotectData(
+        ctypes.byref(blob_in),
+        None,
+        None,
+        None,
+        None,
+        _CRYPTPROTECT_UI_FORBIDDEN,
+        ctypes.byref(blob_out),
+    ):
+        raise ctypes.WinError()
+    try:
+        return ctypes.string_at(blob_out.pbData, blob_out.cbData)
+    finally:
+        if blob_out.pbData:
+            kernel32.LocalFree(ctypes.cast(blob_out.pbData, ctypes.c_void_p))
 
 
 class GoogleCloudSync:
@@ -41,11 +132,28 @@ class GoogleCloudSync:
         block = data.get("installed") or data.get("web") or data
         return str(block["client_id"]), str(block.get("client_secret", ""))
 
+    def _save_token(self, tok: dict[str, Any]) -> None:
+        cipher = _dpapi_protect(json.dumps(tok).encode("utf-8"))
+        wrapper = {"dpapi_v1": base64.b64encode(cipher).decode("ascii")}
+        monitor.atomic_write_text(self.token_path, json.dumps(wrapper, indent=2))
+
     def load_token(self) -> dict[str, Any] | None:
         if not self.token_path.exists():
             return None
         try:
-            return json.loads(self.token_path.read_text(encoding="utf-8"))
+            raw = json.loads(self.token_path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                return None
+            if "dpapi_v1" in raw:
+                cipher = base64.b64decode(str(raw["dpapi_v1"]).encode("ascii"))
+                plain = _dpapi_unprotect(cipher).decode("utf-8")
+                parsed = json.loads(plain)
+                return parsed if isinstance(parsed, dict) else None
+            if raw.get("access_token") or raw.get("refresh_token"):
+                # Migrate legacy plaintext token file transparently on load.
+                self._save_token(raw)
+                return raw
+            return None
         except Exception:
             return None
 
@@ -159,7 +267,7 @@ class GoogleCloudSync:
             with urllib.request.urlopen(u_req, timeout=10) as u_resp:
                 uinfo = json.loads(u_resp.read().decode("utf-8"))
             tok["email"] = uinfo.get("email", "Google Account")
-            self.token_path.write_text(json.dumps(tok, indent=2), encoding="utf-8")
+            self._save_token(tok)
             return True, f"Signed in as {tok['email']}"
         except Exception as exc:
             return False, f"Token exchange failed: {exc}"
@@ -187,7 +295,7 @@ class GoogleCloudSync:
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     refreshed = json.loads(resp.read().decode("utf-8"))
                 tok["access_token"] = refreshed["access_token"]
-                self.token_path.write_text(json.dumps(tok, indent=2), encoding="utf-8")
+                self._save_token(tok)
             except Exception:
                 pass
         return tok.get("access_token")

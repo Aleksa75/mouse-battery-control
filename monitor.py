@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import math
 import os
 import re
@@ -17,6 +18,8 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import xml.sax.saxutils as saxutils
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -72,8 +75,19 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "accent_mode": "Windows",
     "calibration_style": "Combo",
     "advertised_capacity_mah": 500,
-    "update_source": r"C:\Users\Infer\.gemini\antigravity\scratch\mouse-battery-notifier\releases",
+    "update_source": "github:Aleksa75/mouse-battery-control",
+    "auto_fetch_mouse_icons": False,
 }
+
+_CONFIG_LOCK = threading.RLock()
+_STATE_LOCK = threading.RLock()
+_HISTORY_LOCK = threading.RLock()
+
+VALID_THEMES = {"System", "Dark", "Light", "Matrix"}
+VALID_ACCENT_MODES = {"Windows", "Default"}
+VALID_LANGUAGES = {"en", "ru"}
+VALID_CALIBRATION_STYLES = {"Combo", "Bar", "Badge", "Minimal"}
+VALID_ACCEL_MODES = {"Off", "On", "Auto"}
 
 SOUND_EVENTS: dict[str, str | None] = {
     "Default": "ms-winsoundevent:Notification.Default",
@@ -122,27 +136,249 @@ def report_rate_baseline_drain_pct_per_hour(report_rate_hz: int) -> float:
     return round((total_mw / BATTERY_CAPACITY_MWH) * 100.0, 2)
 
 
-def load_config() -> dict[str, Any]:
-    cfg = dict(DEFAULT_CONFIG)
-    if CONFIG_PATH.exists():
-        try:
-            cfg.update(json.loads(CONFIG_PATH.read_text(encoding="utf-8")))
-        except Exception:
-            pass
+def atomic_write_text(path: Path, text: str) -> None:
+    """Atomically replace a file via sibling temp file + fsync + retry on transient locks."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=str(path.parent),
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as tf:
+            tmp_path = Path(tf.name)
+            tf.write(text)
+            tf.flush()
+            try:
+                os.fsync(tf.fileno())
+            except OSError:
+                pass
+
+        for attempt in range(5):
+            try:
+                os.replace(tmp_path, path)
+                tmp_path = None
+                return
+            except PermissionError:
+                if attempt >= 4:
+                    raise
+                time.sleep(0.05)
+    finally:
+        if tmp_path is not None and tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+
+
+def _validate_int_range(val: Any, name: str, lo: int, hi: int, fallback: int, strict: bool) -> int:
+    if isinstance(val, bool) or not isinstance(val, int):
+        if strict:
+            raise ValueError(f"{name} must be an integer between {lo} and {hi}")
+        return fallback
+    if val < lo or val > hi:
+        if strict:
+            raise ValueError(f"{name} must be between {lo} and {hi}")
+        return fallback
+    return val
+
+
+def _validate_num_range(val: Any, name: str, lo: float, hi: float, fallback: float, strict: bool) -> float:
+    if isinstance(val, bool) or not isinstance(val, (int, float)):
+        if strict:
+            raise ValueError(f"{name} must be a number between {lo} and {hi}")
+        return fallback
+    fval = float(val)
+    if not math.isfinite(fval) or fval < lo or fval > hi:
+        if strict:
+            raise ValueError(f"{name} must be between {lo} and {hi}")
+        return fallback
+    return fval
+
+
+def validate_config(
+    raw: Any,
+    base: dict[str, Any] | None = None,
+    *,
+    strict: bool = False,
+) -> dict[str, Any]:
+    """Validate and sanitize configuration dict; raises ValueError in strict mode on bad fields."""
+    fallback = dict(base if base is not None else DEFAULT_CONFIG)
+    if not isinstance(raw, dict):
+        if strict:
+            raise ValueError("Configuration must be a JSON object.")
+        return fallback
+
+    cfg = dict(fallback)
+    for k, v in raw.items():
+        if k not in {
+            "evening_hour",
+            "poll_interval_minutes",
+            "low_battery_threshold",
+            "critical_battery_threshold",
+            "reserve_battery_pct",
+            "cooldown_minutes",
+            "critical_cooldown_minutes",
+            "default_drain_rate_pct_per_hour",
+            "max_history_days",
+            "advertised_capacity_mah",
+            "notifications_enabled",
+            "close_to_tray",
+            "auto_fetch_mouse_icons",
+            "notification_sound",
+            "theme",
+            "accent_mode",
+            "language",
+            "calibration_style",
+            "accel_mode",
+            "tab_order",
+            "hidden_devices",
+            "auto_games",
+            "device_filter",
+            "update_source",
+            "report_rate",
+        }:
+            cfg[k] = v
+
+    int_specs = (
+        ("evening_hour", 0, 23, int(fallback.get("evening_hour", 22))),
+        ("poll_interval_minutes", 1, 1440, int(fallback.get("poll_interval_minutes", 5))),
+        ("cooldown_minutes", 1, 1440, int(fallback.get("cooldown_minutes", 60))),
+        ("critical_cooldown_minutes", 1, 1440, int(fallback.get("critical_cooldown_minutes", 20))),
+        ("max_history_days", 1, 365, int(fallback.get("max_history_days", 30))),
+        ("advertised_capacity_mah", 50, 10000, int(fallback.get("advertised_capacity_mah", 500))),
+    )
+    for key, lo, hi, fb in int_specs:
+        if key in raw:
+            cfg[key] = _validate_int_range(raw[key], key, lo, hi, fb, strict)
+
+    num_specs = (
+        ("low_battery_threshold", 1.0, 100.0, float(fallback.get("low_battery_threshold", 20))),
+        ("critical_battery_threshold", 1.0, 100.0, float(fallback.get("critical_battery_threshold", 10))),
+        ("reserve_battery_pct", 0.0, 50.0, float(fallback.get("reserve_battery_pct", 5))),
+        ("default_drain_rate_pct_per_hour", 0.05, 50.0, float(fallback.get("default_drain_rate_pct_per_hour", 1.5))),
+    )
+    for key, lo, hi, fb in num_specs:
+        if key in raw:
+            cfg[key] = _validate_num_range(raw[key], key, lo, hi, fb, strict)
+
+    if float(cfg.get("critical_battery_threshold", 10)) > float(cfg.get("low_battery_threshold", 20)):
+        if strict:
+            raise ValueError("critical_battery_threshold cannot exceed low_battery_threshold")
+        cfg["critical_battery_threshold"] = cfg["low_battery_threshold"]
+
+    for bkey in ("notifications_enabled", "close_to_tray", "auto_fetch_mouse_icons"):
+        if bkey in raw:
+            val = raw[bkey]
+            if not isinstance(val, bool):
+                if strict:
+                    raise ValueError(f"{bkey} must be a boolean")
+                cfg[bkey] = bool(fallback.get(bkey, False))
+            else:
+                cfg[bkey] = val
+
+    enum_specs = (
+        ("notification_sound", set(SOUND_EVENTS.keys()), str(fallback.get("notification_sound", "Default"))),
+        ("theme", VALID_THEMES, str(fallback.get("theme", "Dark"))),
+        ("accent_mode", VALID_ACCENT_MODES, str(fallback.get("accent_mode", "Windows"))),
+        ("language", VALID_LANGUAGES, str(fallback.get("language", "en"))),
+        ("calibration_style", VALID_CALIBRATION_STYLES, str(fallback.get("calibration_style", "Combo"))),
+        ("accel_mode", VALID_ACCEL_MODES, str(fallback.get("accel_mode", "Off"))),
+    )
+    for key, allowed, fb in enum_specs:
+        if key in raw:
+            val = raw[key]
+            if not isinstance(val, str) or val not in allowed:
+                if strict:
+                    raise ValueError(f"{key} must be one of {sorted(allowed)}")
+                cfg[key] = fb
+            else:
+                cfg[key] = val
+
+    if "tab_order" in raw:
+        val = raw["tab_order"]
+        if not isinstance(val, list) or not all(isinstance(x, str) for x in val):
+            if strict:
+                raise ValueError("tab_order must be a list of strings")
+            cfg["tab_order"] = normalize_tab_order(fallback.get("tab_order"))
+        else:
+            cfg["tab_order"] = normalize_tab_order(val)
+
+    for lkey in ("hidden_devices", "auto_games"):
+        if lkey in raw:
+            val = raw[lkey]
+            if not isinstance(val, list) or not all(isinstance(x, str) for x in val):
+                if strict:
+                    raise ValueError(f"{lkey} must be a list of strings")
+                cfg[lkey] = list(fallback.get(lkey, []))
+            else:
+                cfg[lkey] = list(val)
+
+    for skey in ("device_filter", "update_source"):
+        if skey in raw:
+            val = raw[skey]
+            if val is not None and not isinstance(val, str):
+                if strict:
+                    raise ValueError(f"{skey} must be a string or null")
+                cfg[skey] = fallback.get(skey)
+            else:
+                cfg[skey] = val
+
+    if "report_rate" in raw:
+        val = raw["report_rate"]
+        ok_rate = False
+        if not isinstance(val, bool):
+            if isinstance(val, int) and val > 0:
+                ok_rate = True
+            elif isinstance(val, str):
+                m = re.search(r"(\d+)", val)
+                if m and int(m.group(1)) > 0:
+                    ok_rate = True
+        if not ok_rate:
+            if strict:
+                raise ValueError("report_rate must be a valid polling rate")
+            cfg["report_rate"] = fallback.get("report_rate", "1000 Hz")
+        else:
+            cfg["report_rate"] = val
+
     return cfg
 
 
+def load_config() -> dict[str, Any]:
+    with _CONFIG_LOCK:
+        if CONFIG_PATH.exists():
+            try:
+                raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+                return validate_config(raw, base=DEFAULT_CONFIG, strict=False)
+            except Exception:
+                pass
+        return dict(DEFAULT_CONFIG)
+
+
+def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
+    clean = validate_config(cfg, base=DEFAULT_CONFIG, strict=False)
+    with _CONFIG_LOCK:
+        atomic_write_text(CONFIG_PATH, json.dumps(clean, indent=2))
+    return clean
+
+
 def load_state() -> dict[str, Any]:
-    if STATE_PATH.exists():
-        try:
-            return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
+    with _STATE_LOCK:
+        if STATE_PATH.exists():
+            try:
+                raw = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+                return raw if isinstance(raw, dict) else {}
+            except Exception:
+                pass
+        return {}
 
 
 def save_state(state: dict[str, Any]) -> None:
-    STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    with _STATE_LOCK:
+        atomic_write_text(STATE_PATH, json.dumps(state, indent=2))
 
 
 def read_lghub_batteries() -> list[dict[str, Any]]:
@@ -479,23 +715,66 @@ def format_device_name(slug: str) -> str:
 
 
 def load_history(max_days: int) -> list[dict[str, Any]]:
-    if not HISTORY_PATH.exists():
-        return []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=max_days)
-    entries: list[dict[str, Any]] = []
-    with HISTORY_PATH.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-                ts = datetime.fromisoformat(rec["ts"])
-                if ts >= cutoff:
-                    entries.append(rec)
-            except Exception:
-                continue
-    return entries
+    with _HISTORY_LOCK:
+        if not HISTORY_PATH.exists():
+            return []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=max_days)
+        entries: list[dict[str, Any]] = []
+        with HISTORY_PATH.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                    ts = datetime.fromisoformat(rec["ts"])
+                    if ts >= cutoff:
+                        entries.append(rec)
+                except Exception:
+                    continue
+        return entries
+
+
+def append_history_with_status(
+    device: dict[str, Any],
+    history: list[dict[str, Any]],
+    max_days: int,
+    report_rate_hz: int | None = None,
+    active_seconds: float | None = None,
+) -> tuple[list[dict[str, Any]], bool]:
+    if device.get("percentage") is None:
+        return history, False
+    with _HISTORY_LOCK:
+        now_utc = datetime.now(timezone.utc)
+        rec: dict[str, Any] = {
+            "ts": now_utc.isoformat(),
+            "device": device["device"],
+            "pct": device["percentage"],
+            "charging": device["is_charging"],
+        }
+        if report_rate_hz is not None:
+            rec["rate_hz"] = parse_report_rate_hz(report_rate_hz)
+        if active_seconds is not None and active_seconds > 0:
+            rec["active_s"] = round(float(active_seconds), 1)
+
+        # Avoid writing redundant entries within 4 minutes if nothing changed
+        dev_hist = [h for h in history if h.get("device") == device["device"]]
+        if dev_hist:
+            last = dev_hist[-1]
+            last_ts = datetime.fromisoformat(last["ts"])
+            if (
+                (now_utc - last_ts) < timedelta(minutes=4)
+                and last.get("pct") == rec["pct"]
+                and last.get("charging") == rec["charging"]
+            ):
+                return history, False
+
+        history.append(rec)
+        cutoff = now_utc - timedelta(days=max_days)
+        pruned = [h for h in history if datetime.fromisoformat(h["ts"]) >= cutoff]
+        payload = "\n".join(json.dumps(item) for item in pruned) + ("\n" if pruned else "")
+        atomic_write_text(HISTORY_PATH, payload)
+        return pruned, True
 
 
 def append_history(
@@ -505,38 +784,13 @@ def append_history(
     report_rate_hz: int | None = None,
     active_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
-    if device.get("percentage") is None:
-        return history
-    now_utc = datetime.now(timezone.utc)
-    rec: dict[str, Any] = {
-        "ts": now_utc.isoformat(),
-        "device": device["device"],
-        "pct": device["percentage"],
-        "charging": device["is_charging"],
-    }
-    if report_rate_hz is not None:
-        rec["rate_hz"] = parse_report_rate_hz(report_rate_hz)
-    if active_seconds is not None and active_seconds > 0:
-        rec["active_s"] = round(float(active_seconds), 1)
-
-    # Avoid writing redundant entries within 4 minutes if nothing changed
-    dev_hist = [h for h in history if h.get("device") == device["device"]]
-    if dev_hist:
-        last = dev_hist[-1]
-        last_ts = datetime.fromisoformat(last["ts"])
-        if (
-            (now_utc - last_ts) < timedelta(minutes=4)
-            and last.get("pct") == rec["pct"]
-            and last.get("charging") == rec["charging"]
-        ):
-            return history
-
-    history.append(rec)
-    cutoff = now_utc - timedelta(days=max_days)
-    pruned = [h for h in history if datetime.fromisoformat(h["ts"]) >= cutoff]
-    with HISTORY_PATH.open("w", encoding="utf-8") as f:
-        for item in pruned:
-            f.write(json.dumps(item) + "\n")
+    pruned, _ = append_history_with_status(
+        device,
+        history,
+        max_days,
+        report_rate_hz=report_rate_hz,
+        active_seconds=active_seconds,
+    )
     return pruned
 
 
@@ -822,7 +1076,7 @@ def format_duration(hours: float) -> str:
     return f"{m}m"
 
 
-def send_windows_toast(title: str, line1: str, line2: str, sound_name: str = "Default") -> None:
+def send_windows_toast(title: str, line1: str, line2: str, sound_name: str = "Default") -> bool:
     """Display a native Windows 10/11 Toast Notification via PowerShell WinRT."""
     xml_title = saxutils.escape(title)
     xml_line1 = saxutils.escape(line1)
@@ -857,11 +1111,27 @@ $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNoti
 $notifier.Show($toast)
 """
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-    subprocess.run(
-        ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps_script],
-        check=False,
-        creationflags=creationflags,
-    )
+    try:
+        proc = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps_script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            creationflags=creationflags,
+        )
+        if getattr(proc, "returncode", 1) != 0:
+            err_msg = (getattr(proc, "stderr", "") or getattr(proc, "stdout", "") or "").strip()[:300]
+            logging.getLogger("MouseBatteryTray").warning(
+                "Windows toast notification failed (exit=%s): %s",
+                getattr(proc, "returncode", None),
+                err_msg,
+            )
+            return False
+        return True
+    except Exception as exc:
+        logging.getLogger("MouseBatteryTray").warning("Windows toast notification error: %s", exc)
+        return False
 
 
 def evaluate_device(
@@ -1003,14 +1273,19 @@ def evaluate_device(
             line1 = f"{device['display_name']}: ~{time_left_str} left (until ~{depletion_str})"
             line2 = f"Usage rate: {rate_label}"
 
-        send_windows_toast(title, line1, line2, sound_name=str(cfg.get("notification_sound", "Default")))
-        result["notified"] = True
-        if not force_notify:
-            state[device["device"]] = {
-                "last_notified": datetime.now(timezone.utc).isoformat(),
-                "last_reason": reason,
-                "last_pct": pct,
-            }
+        toast_ok = send_windows_toast(
+            title, line1, line2, sound_name=str(cfg.get("notification_sound", "Default"))
+        )
+        if toast_ok:
+            result["notified"] = True
+            if not force_notify:
+                state[device["device"]] = {
+                    "last_notified": datetime.now(timezone.utc).isoformat(),
+                    "last_reason": reason,
+                    "last_pct": pct,
+                }
+        else:
+            result["notify_failed"] = True
 
     return result
 

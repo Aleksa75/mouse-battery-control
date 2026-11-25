@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -28,6 +29,60 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
+
+
+def _parse_sha256_hex(val: Any) -> str:
+    """Normalize a raw SHA-256 or 'sha256:<hex>' digest string into lowercase 64-hex, or ''."""
+    if not val:
+        return ""
+    s = str(val).strip().lower()
+    if s.startswith("sha256:"):
+        s = s.split(":", 1)[1].strip()
+    if len(s) == 64 and all(ch in "0123456789abcdef" for ch in s):
+        return s
+    return ""
+
+
+def _fetch_github_checksum_from_assets(assets: list[dict[str, Any]], target_name: str) -> str:
+    """Fallback lookup for SHA256SUMS.txt or <asset>.sha256 when GitHub asset.digest is absent."""
+    target_lower = target_name.lower()
+    target_base = Path(target_lower).name
+    candidates: list[tuple[int, str, str]] = []
+    for asset in assets:
+        aname = str(asset.get("name", "")).strip()
+        alow = aname.lower()
+        url = str(asset.get("browser_download_url", "")).strip()
+        if not url:
+            continue
+        if alow in ("sha256sums.txt", "sha256sums"):
+            candidates.append((0, alow, url))
+        elif target_base and alow in (f"{target_base}.sha256", f"{target_base}.sha256.txt"):
+            candidates.append((1, alow, url))
+        elif alow.endswith(".sha256") or alow.endswith(".sha256.txt"):
+            candidates.append((2, alow, url))
+
+    for _, alow, url in sorted(candidates, key=lambda x: x[0]):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "MouseBatteryControl-Updater"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                text = resp.read().decode("utf-8", errors="replace")
+        except Exception:
+            continue
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            m = re.match(r"^([0-9a-fA-F]{64})(?:\s+\*?(.+))?$", line)
+            if not m:
+                continue
+            digest = m.group(1).lower()
+            fname = (m.group(2) or "").strip()
+            if fname:
+                if Path(fname.lower()).name == target_base or fname.lower() == target_lower:
+                    return digest
+            elif alow in (f"{target_base}.sha256", f"{target_base}.sha256.txt"):
+                return digest
+    return ""
 
 
 def parse_version(v: str) -> tuple[int, ...]:
@@ -67,21 +122,25 @@ def check_for_update(current_version: str, update_source: str | None) -> dict[st
                 data = json.loads(resp.read().decode("utf-8"))
             latest = str(data.get("tag_name", "")).lstrip("vV")
             notes = str(data.get("body", "")).strip()[:200]
-            expected_sha256 = ""
-            download_url = ""
-            exe_fallback_url = ""
-            for asset in data.get("assets", []):
+            assets = [a for a in data.get("assets", []) if isinstance(a, dict)]
+            chosen_asset: dict[str, Any] | None = None
+            exe_asset: dict[str, Any] | None = None
+            for asset in assets:
                 asset_name = str(asset.get("name", "")).lower()
-                asset_url = str(asset.get("browser_download_url", ""))
-                if asset_name.endswith(".zip") and not download_url:
-                    download_url = asset_url
+                if asset_name.endswith(".zip") and chosen_asset is None:
+                    chosen_asset = asset
                     package_type = "zip"
                     break
-                if asset_name.endswith(".exe") and not exe_fallback_url:
-                    exe_fallback_url = asset_url
-            if not download_url:
-                download_url = exe_fallback_url
+                if asset_name.endswith(".exe") and exe_asset is None:
+                    exe_asset = asset
+            if chosen_asset is None and exe_asset is not None:
+                chosen_asset = exe_asset
                 package_type = "exe"
+            download_url = str(chosen_asset.get("browser_download_url", "")) if chosen_asset else ""
+            chosen_name = str(chosen_asset.get("name", "")) if chosen_asset else ""
+            expected_sha256 = _parse_sha256_hex(chosen_asset.get("digest")) if chosen_asset else ""
+            if chosen_asset and not expected_sha256:
+                expected_sha256 = _fetch_github_checksum_from_assets(assets, chosen_name)
         elif src.lower().startswith(("http://", "https://")):
             req = urllib.request.Request(src, headers={"User-Agent": "MouseBatteryControl-Updater"})
             with urllib.request.urlopen(req, timeout=8) as resp:
@@ -91,11 +150,11 @@ def check_for_update(current_version: str, update_source: str | None) -> dict[st
             pkg_url = str(data.get("package_url", "")).strip()
             if pkg_url:
                 download_url = pkg_url
-                expected_sha256 = str(data.get("package_sha256") or data.get("sha256") or "").strip().lower()
+                expected_sha256 = _parse_sha256_hex(data.get("package_sha256") or data.get("sha256") or "")
                 package_type = "zip"
             else:
                 download_url = str(data.get("exe_url", ""))
-                expected_sha256 = str(data.get("sha256", "")).strip().lower()
+                expected_sha256 = _parse_sha256_hex(data.get("sha256", ""))
                 package_type = "exe"
         else:
             # Local folder containing latest.json
@@ -270,6 +329,13 @@ def download_and_apply_update(
 
     if not download_url:
         return False, "No update package URL found in the release."
+
+    is_remote = download_url.lower().startswith(("http://", "https://"))
+    clean_sha = _parse_sha256_hex(expected_sha256)
+    if is_remote and not clean_sha:
+        return False, "Update package missing SHA-256 digest; refusing unverified remote download."
+    if clean_sha:
+        expected_sha256 = clean_sha
 
     current_exe = Path(sys.executable).resolve()
     app_dir = current_exe.parent

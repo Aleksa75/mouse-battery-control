@@ -41,7 +41,7 @@ import updater
 
 BASE_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
-APP_VERSION = "2.29.0"
+APP_VERSION = "2.30.0"
 LOG_PATH = BASE_DIR / "app.log"
 
 
@@ -671,7 +671,7 @@ class MouseBatteryTrayApp:
         self._icon_cache: dict[tuple[str, str], ctk.CTkImage] = {}
         self._gauge_cache_key: tuple[Any, ...] | None = None
         self.telemetry = telemetry.ActionTelemetry(BASE_DIR / "telemetry.jsonl")
-        self._active_seconds_accum: float = 0.0
+        self._active_seconds_by_device: dict[str, float] = {}
         self._active_lock = threading.Lock()
         self._toast_label: ctk.CTkLabel | None = None
         self._toast_after_id: str | None = None
@@ -1000,24 +1000,46 @@ class MouseBatteryTrayApp:
         state = monitor.load_state()
         notifications_enabled = bool(cfg.get("notifications_enabled", True))
         cfg_hz = monitor.parse_report_rate_hz(cfg.get("report_rate", 1000))
-        with self._active_lock:
-            active_delta = self._active_seconds_accum
-            self._active_seconds_accum = 0.0
+
+        battery_slugs = [str(d.get("device") or "") for d in devices if d.get("percentage") is not None]
+        if battery_slugs:
+            target_slug = (
+                self._selected_device_slug
+                if self._selected_device_slug in battery_slugs
+                else battery_slugs[0]
+            )
+            with self._active_lock:
+                unassigned = self._active_seconds_by_device.pop("__pending__", 0.0)
+                if unassigned > 0:
+                    self._active_seconds_by_device[target_slug] = (
+                        self._active_seconds_by_device.get(target_slug, 0.0) + unassigned
+                    )
 
         results: list[dict[str, Any]] = []
         for dev in devices:
+            dev_slug = str(dev.get("device") or "")
             dev_hz = (
                 (report_rate_hz if report_rate_hz is not None else cfg_hz)
                 if dev.get("source") in ("lghub", "hidpp")
                 else None
             )
-            history = monitor.append_history(
+            with self._active_lock:
+                pending_active = float(self._active_seconds_by_device.get(dev_slug, 0.0))
+            history, written = monitor.append_history_with_status(
                 dev,
                 history,
                 int(cfg.get("max_history_days", 30)),
                 report_rate_hz=dev_hz,
-                active_seconds=(active_delta if active_delta > 0 else None),
+                active_seconds=(pending_active if pending_active > 0 else None),
             )
+            if written and pending_active > 0:
+                with self._active_lock:
+                    cur_active = float(self._active_seconds_by_device.get(dev_slug, 0.0))
+                    rem = max(0.0, cur_active - pending_active)
+                    if rem > 0.0:
+                        self._active_seconds_by_device[dev_slug] = rem
+                    else:
+                        self._active_seconds_by_device.pop(dev_slug, None)
             res = monitor.evaluate_device(
                 dev,
                 cfg,
@@ -1053,8 +1075,12 @@ class MouseBatteryTrayApp:
                 self.check_battery(force_notify=False)
                 self._check_updates_silent_if_due(min_interval_s=900.0)
             except Exception:
-                pass
-            interval_min = max(1, int(self.cfg.get("poll_interval_minutes", 5)))
+                log.exception("Polling loop iteration failed")
+            try:
+                raw_iv = self.cfg.get("poll_interval_minutes", 5)
+                interval_min = max(1, min(1440, int(raw_iv))) if not isinstance(raw_iv, bool) else 5
+            except Exception:
+                interval_min = 5
             self.poll_wakeup.wait(timeout=interval_min * 60)
             self.poll_wakeup.clear()
 
@@ -1417,6 +1443,7 @@ class MouseBatteryTrayApp:
 
         notes_card = _make_card(self._t("recent_highlights"))
         highlights = [
+            ("v2.30.0", self._t("hl_v2300")),
             ("v2.29.0", self._t("hl_v2290")),
             ("v2.28.0", self._t("hl_v2280")),
             ("v2.27.0", self._t("hl_v2270")),
@@ -1626,7 +1653,7 @@ class MouseBatteryTrayApp:
         normalized = monitor.normalize_tab_order(order)
         cfg = monitor.load_config()
         cfg["tab_order"] = normalized
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._record_telemetry("reorder_tabs", requested=order, api_ok=True, actual=normalized, verified=True)
         self._flash_status(self._t("tab_order_saved"), GREEN)
@@ -1635,7 +1662,7 @@ class MouseBatteryTrayApp:
         default_order = list(monitor.DEFAULT_TAB_ORDER)
         cfg = monitor.load_config()
         cfg["tab_order"] = default_order
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         nav = self._widgets.get("nav_bar")
         if nav is not None:
@@ -2244,6 +2271,15 @@ class MouseBatteryTrayApp:
                 self._t("health_calibrating_fmt", cur=float(health.get("active_cycles", 0.0))),
                 p["AMBER"],
             )
+        ctk.CTkLabel(
+            health_card,
+            text=self._t("health_experimental_note"),
+            font=ctk.CTkFont("Segoe UI", 9),
+            text_color=p["FG_MUTED"],
+            anchor="w",
+            justify="left",
+            wraplength=420,
+        ).pack(fill="x", pady=(4, 0))
 
         # Card 3: Time of Day Breakdown (Night / Morning / Day / Evening)
         tod_card = _make_card(self._t("learned_tod_title"))
@@ -2357,8 +2393,14 @@ class MouseBatteryTrayApp:
                 if loaded is not None:
                     return loaded
 
-        # No model-specific icon found yet -> auto-fetch once in background
-        if norm and cache_path and display_name and norm not in self._icon_fetch_attempted:
+        # No model-specific icon found yet -> opt-in background Wikimedia Commons lookup
+        if (
+            bool(self.cfg.get("auto_fetch_mouse_icons", False))
+            and norm
+            and cache_path
+            and display_name
+            and norm not in self._icon_fetch_attempted
+        ):
             self._icon_fetch_attempted.add(norm)
 
             def _fetch_worker() -> None:
@@ -2423,7 +2465,7 @@ class MouseBatteryTrayApp:
         if slug not in hidden:
             hidden.append(slug)
         cfg["hidden_devices"] = hidden
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._record_telemetry("hide_device", requested=slug, api_ok=True, actual=hidden, verified=(slug in hidden))
 
@@ -2449,7 +2491,7 @@ class MouseBatteryTrayApp:
         """Clear hidden_devices list and trigger immediate rediscovery."""
         cfg = monitor.load_config()
         cfg["hidden_devices"] = []
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._on_refresh_now()
         self._flash_status(self._t("device_restored_toast"), GREEN)
@@ -3319,7 +3361,7 @@ class MouseBatteryTrayApp:
         enabled = bool(self._vars["close_to_tray"].get())
         cfg = monitor.load_config()
         cfg["close_to_tray"] = enabled
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         msg = self._t("close_to_tray_on") if enabled else self._t("close_to_tray_off")
         self._flash_status(msg, GREEN)
@@ -3508,7 +3550,7 @@ class MouseBatteryTrayApp:
         mode = getattr(self, "_lbl_to_theme", {}).get(label, label)
         cfg = monitor.load_config()
         cfg["theme"] = mode
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         resolved = theme.resolve_theme(mode)
         self._resolved_theme = resolved
@@ -3528,7 +3570,7 @@ class MouseBatteryTrayApp:
         accent_mode = getattr(self, "_lbl_to_accent", {}).get(label, "Windows")
         cfg = monitor.load_config()
         cfg["accent_mode"] = accent_mode
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         theme_mode = str(cfg.get("theme", "Dark"))
         resolved = theme.resolve_theme(theme_mode)
@@ -3576,7 +3618,7 @@ class MouseBatteryTrayApp:
     def _unlock_or_toggle_matrix(self, force_matrix: bool = False) -> None:
         cfg = monitor.load_config()
         cfg["matrix_unlocked"] = True
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         cur = str(cfg.get("theme", "Dark"))
         if force_matrix or cur != "Matrix":
@@ -3592,7 +3634,7 @@ class MouseBatteryTrayApp:
             latest = monitor.load_config()
             if hits > int(latest.get("aim_best_hits", 0)):
                 latest["aim_best_hits"] = int(hits)
-                monitor.CONFIG_PATH.write_text(json.dumps(latest, indent=2), encoding="utf-8")
+                latest = monitor.save_config(latest)
                 self.cfg = latest
 
         easter_eggs.open_aim_trainer(
@@ -3664,7 +3706,7 @@ class MouseBatteryTrayApp:
         self._lang = lang
         cfg = monitor.load_config()
         cfg["language"] = lang
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._record_telemetry("set_language", requested=lang, api_ok=True, actual=self._lang, verified=True)
         prev_page = self._active_page
@@ -3682,7 +3724,7 @@ class MouseBatteryTrayApp:
     def _on_calibration_style_change(self, style: str) -> None:
         cfg = monitor.load_config()
         cfg["calibration_style"] = style
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._refresh_dashboard()
         self._flash_status(f"✓ Estimate indicator: {style}", GREEN)
@@ -3697,7 +3739,7 @@ class MouseBatteryTrayApp:
         cfg["critical_battery_threshold"] = int(self._vars["critical_battery_threshold"].get())
         cfg["cooldown_minutes"] = int(self._vars["cooldown_minutes"].get())
         cfg["poll_interval_minutes"] = int(self._vars["poll_interval_minutes"].get())
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
 
         self.poll_wakeup.set()
@@ -4206,7 +4248,7 @@ class MouseBatteryTrayApp:
             cfg["mouse_mode"] = "Onboard"
             if "mouse_mode_seg" in self._widgets:
                 self._widgets["mouse_mode_seg"].set(self._mode_to_lbl.get("Onboard", "Onboard"))
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
 
         def _worker() -> None:
@@ -4235,7 +4277,7 @@ class MouseBatteryTrayApp:
         log.info("UI_CLICK: set_mouse_mode -> %s", mode_str)
         cfg = monitor.load_config()
         cfg["mouse_mode"] = mode_str
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         want_onboard = (mode_str == "Onboard")
         want_val = 1 if want_onboard else 2
@@ -4267,7 +4309,7 @@ class MouseBatteryTrayApp:
         log.info("UI_CLICK: set_rgb_mode -> %s", mode_key)
         cfg = monitor.load_config()
         cfg["rgb_mode"] = mode_key
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         r, g, b = cfg.get("rgb_color", [56, 189, 248])
         api_mode = "Off" if mode_key.startswith("Off") else mode_key
@@ -4293,7 +4335,7 @@ class MouseBatteryTrayApp:
             cfg["rgb_mode"] = mode_key
             if "rgb_seg" in self._widgets:
                 self._widgets["rgb_seg"].set(self._rgb_to_lbl.get(mode_key, mode_key))
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         allow_host = str(cfg.get("mouse_mode", "Onboard")) == "Host"
         mode_lbl = self._rgb_to_lbl.get(mode_key, mode_key)
@@ -4413,7 +4455,7 @@ class MouseBatteryTrayApp:
         self._update_dpi_ui(dpi_val, None, from_poll=False)
         cfg = monitor.load_config()
         cfg["active_dpi"] = dpi_val
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         stage_vals = [v for v, _ in DPI_STAGES]
         stage_idx = stage_vals.index(dpi_val) if dpi_val in stage_vals else None
@@ -4441,7 +4483,7 @@ class MouseBatteryTrayApp:
             return
         cfg = monitor.load_config()
         cfg["report_rate"] = rate_str
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         hz = int(rate_str.split()[0])
 
@@ -4585,7 +4627,56 @@ class MouseBatteryTrayApp:
             corner_radius=10,
         ).pack(side="right", fill="x", expand=True, padx=(6, 0))
 
+        # Card 3: Online Mouse Icons (Opt-In)
+        cfg = monitor.load_config()
+        self._vars["auto_fetch_mouse_icons"] = tk.BooleanVar(
+            value=bool(cfg.get("auto_fetch_mouse_icons", False))
+        )
+        icon_card = ctk.CTkFrame(parent, fg_color=CARD, border_color=BORDER, border_width=1, corner_radius=14)
+        icon_card.pack(fill="x", pady=(0, 14))
+        ic = ctk.CTkFrame(icon_card, fg_color=CARD)
+        ic.pack(fill="x", padx=16, pady=14)
+
+        ctk.CTkLabel(
+            ic, text=self._t("online_icons_card_title"), font=ctk.CTkFont("Segoe UI", 13, "bold"), text_color=FG
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            ic,
+            text=self._t("auto_fetch_icons_hint"),
+            font=ctk.CTkFont("Segoe UI", 10),
+            text_color=FG_MUTED,
+            justify="left",
+            wraplength=490,
+        ).pack(anchor="w", pady=(2, 10))
+        ctk.CTkSwitch(
+            ic,
+            text=self._t("auto_fetch_icons_label"),
+            variable=self._vars["auto_fetch_mouse_icons"],
+            command=self._on_toggle_auto_fetch_icons,
+            font=ctk.CTkFont("Segoe UI", 11),
+            text_color=FG,
+            switch_width=40,
+            switch_height=20,
+            fg_color=SWITCH_TRACK_OFF,
+            progress_color=ACCENT,
+            button_color=SWITCH_BUTTON,
+            button_hover_color=SWITCH_BUTTON_HOVER,
+        ).pack(anchor="w")
+
         self._refresh_cloud_ui()
+
+    def _on_toggle_auto_fetch_icons(self) -> None:
+        enabled = bool(self._vars["auto_fetch_mouse_icons"].get())
+        cfg = monitor.load_config()
+        cfg["auto_fetch_mouse_icons"] = enabled
+        self.cfg = monitor.save_config(cfg)
+        if enabled:
+            self._icon_fetch_attempted.clear()
+            self._refresh_dashboard()
+        self._flash_status(
+            self._t("auto_fetch_icons_on") if enabled else self._t("auto_fetch_icons_off"),
+            GREEN if enabled else FG_MUTED,
+        )
 
     def _refresh_cloud_ui(self) -> None:
         if "cloud_status" not in self._widgets:
@@ -4649,11 +4740,12 @@ class MouseBatteryTrayApp:
             return
         try:
             data = json.loads(Path(path).read_text(encoding="utf-8"))
-            cfg = monitor.load_config()
-            cfg.update(data)
-            monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
-            self.cfg = cfg
+            base = monitor.load_config()
+            validated = monitor.validate_config(data, base=base, strict=True)
+            self.cfg = monitor.save_config(validated)
             self._flash_status(self._t("prefs_imported"), GREEN)
+        except ValueError as exc:
+            self._flash_status(self._t("invalid_config_err", err=exc), RED)
         except Exception as exc:
             self._flash_status(self._t("import_failed", err=exc), RED)
 
@@ -4668,7 +4760,7 @@ class MouseBatteryTrayApp:
         try:
             content = Path(path).read_text(encoding="utf-8")
             json.loads(content)
-            self.cloud.client_secret_path.write_text(content, encoding="utf-8")
+            monitor.atomic_write_text(self.cloud.client_secret_path, content)
             self._refresh_cloud_ui()
             self._flash_status(self._t("creds_loaded"), GREEN)
         except Exception as exc:
@@ -4703,11 +4795,14 @@ class MouseBatteryTrayApp:
         def _worker() -> None:
             ok, res = self.cloud.download_config()
             if ok and isinstance(res, dict):
-                cfg = monitor.load_config()
-                cfg.update(res)
-                monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
-                self.cfg = cfg
-                self.root.after(0, lambda: self._flash_status(self._t("restored_drive"), GREEN))
+                try:
+                    base = monitor.load_config()
+                    validated = monitor.validate_config(res, base=base, strict=True)
+                    self.cfg = monitor.save_config(validated)
+                    self.root.after(0, lambda: self._flash_status(self._t("restored_drive"), GREEN))
+                except ValueError as exc:
+                    err_txt = self._t("invalid_config_err", err=exc)
+                    self.root.after(0, lambda m=err_txt: self._flash_status(m, RED))
             else:
                 self.root.after(0, lambda: self._flash_status(str(res), AMBER))
 
@@ -4739,7 +4834,7 @@ class MouseBatteryTrayApp:
         mode = getattr(self, "_lbl_to_accel", {}).get(mode_lbl, mode_lbl)
         cfg = monitor.load_config()
         cfg["accel_mode"] = mode
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         if mode == "Off":
             want_accel = False
@@ -4779,7 +4874,7 @@ class MouseBatteryTrayApp:
         if exe_name not in games:
             games.append(exe_name)
             cfg["auto_games"] = games
-            monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+            cfg = monitor.save_config(cfg)
             self.cfg = cfg
         self._flash_status(self._t("added_game", exe=exe_name), GREEN)
 
@@ -4788,8 +4883,11 @@ class MouseBatteryTrayApp:
         while not self.stop_event.is_set():
             try:
                 if mouse_features.get_idle_seconds() < 60.0:
+                    target_dev = self._selected_device_slug or "__pending__"
                     with self._active_lock:
-                        self._active_seconds_accum += 2.0
+                        self._active_seconds_by_device[target_dev] = (
+                            self._active_seconds_by_device.get(target_dev, 0.0) + 2.0
+                        )
                 if self.cfg.get("accel_mode") == "Auto":
                     exe = mouse_features.get_foreground_exe_path()
                     in_game = mouse_features.is_game_process(exe, self.cfg.get("auto_games", []))
@@ -4817,7 +4915,7 @@ class MouseBatteryTrayApp:
             self._widgets["accel_seg"].set(self._accel_to_lbl.get(mode, mode))
         cfg = monitor.load_config()
         cfg["accel_mode"] = mode
-        monitor.CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        cfg = monitor.save_config(cfg)
         self.cfg = cfg
         self._apply_mouse_settings(preset_name=name)
 
